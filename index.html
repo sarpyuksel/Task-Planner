@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notion Style Task & Weekly Manager</title>
-    
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏆</text></svg>">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
@@ -21,23 +19,30 @@
         ::-webkit-scrollbar-thumb:hover { background: rgba(55, 53, 47, 0.2); }
         
         select.status-select {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
+            -webkit-appearance: none; -moz-appearance: none; appearance: none;
             background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
-            background-repeat: no-repeat;
-            background-position-x: 100%;
-            background-position-y: 50%;
-            padding-right: 20px;
+            background-repeat: no-repeat; background-position-x: 100%; background-position-y: 50%; padding-right: 20px;
         }
 
         .draggable-card { cursor: grab; }
         .draggable-card:active { cursor: grabbing; }
+        .inline-textarea { resize: none; overflow: hidden; }
 
-        .inline-textarea {
-            resize: none;
-            overflow: hidden;
+        /* Master Checkbox Stili */
+        .master-checkbox {
+            appearance: none;
+            width: 1.25rem; height: 1.25rem;
+            border: 2px solid #d1d5db; border-radius: 50%; /* Yuvarlak hatlı */
+            display: grid; place-content: center; cursor: pointer; transition: all 0.2s ease-in-out;
         }
+        .master-checkbox::before {
+            content: ""; width: 0.65em; height: 0.65em; transform: scale(0); transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em white;
+            transform-origin: center;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+        .master-checkbox:checked { background-color: #16a34a; border-color: #16a34a; }
+        .master-checkbox:checked::before { transform: scale(1); }
     </style>
 </head>
 <body>
@@ -117,19 +122,17 @@
             useEffect(() => { localStorage.setItem("notion_tasks", JSON.stringify(tasks)); }, [tasks]);
             useEffect(() => { localStorage.setItem("notion_weekly_plan", JSON.stringify(weeklyPlan)); }, [weeklyPlan]);
 
+            // --- DRAG & DROP LOGIC ---
             const handleDragStart = (e, day, index) => {
                 dragItem.current = { day, index };
                 setTimeout(() => { e.target.style.opacity = '0.4'; }, 0);
             };
-
             const handleDragEnter = (e, day, index) => { dragOverItem.current = { day, index }; };
-
             const handleDragEnd = (e) => {
                 e.target.style.opacity = '1';
                 dragItem.current = null;
                 dragOverItem.current = null;
             };
-
             const handleDrop = (e, targetDay) => {
                 e.preventDefault();
                 if (!dragItem.current) return;
@@ -153,6 +156,7 @@
                 setWeeklyPlan(newPlan);
             };
 
+            // --- TASK & CATEGORY LOGIC ---
             const handleAddCategory = (e) => {
                 e.preventDefault();
                 const trimmedName = newCategoryName.trim();
@@ -170,7 +174,7 @@
                 if (!newTitle.trim()) return;
                 const newTask = { 
                     id: "task_" + Date.now(), title: newTitle, category: newCategory || categories[0].name, 
-                    details: newDetails, priority: newPriority, status: newStatus, subTasks: [] 
+                    details: newDetails, priority: newPriority, status: newStatus, isTotallyDone: false, subTasks: [] 
                 };
                 setTasks([newTask, ...tasks]);
                 setNewTitle(""); setNewDetails(""); setNewPriority("Orta"); setNewStatus("Not Started"); setShowAddForm(false);
@@ -188,64 +192,49 @@
                 }
             };
 
+            // Global (Genel) Durum Güncellemeleri
             const updateTaskStatus = (taskId, status) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, status } : t)); };
             const updateTaskPriority = (taskId, priority) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, priority } : t)); };
-            
-            // YENİ: Başlık düzenleme fonksiyonu eklendi
-            const updateTaskTitle = (taskId, title) => {
-                setTasks(tasks.map(t => t.id === taskId ? { ...t, title } : t));
+            const updateTaskTitle = (taskId, title) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, title } : t)); };
+            const updateTaskDetails = (taskId, details) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, details } : t)); };
+
+            // YENİ: Totally Done (Master Checkbox) Fonksiyonu
+            const toggleTotallyDone = (taskId) => {
+                setTasks(tasks.map(t => t.id === taskId ? { ...t, isTotallyDone: !t.isTotallyDone } : t));
             };
 
-            const updateTaskDetails = (taskId, details) => { 
-                setTasks(tasks.map(t => t.id === taskId ? { ...t, details } : t)); 
-            };
-
+            // Alt Görev Fonksiyonları
             const updateSubTaskTitle = (taskId, subTaskId, title) => {
-                setTasks(tasks.map(task => {
-                    if (task.id === taskId) {
-                        return { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, title } : sub) };
-                    }
-                    return task;
-                }));
+                setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, title } : sub) } : task));
             };
-
             const toggleSubTask = (taskId, subTaskId) => {
-                setTasks(tasks.map(task => {
-                    if (task.id === taskId) {
-                        return { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, isCompleted: !sub.isCompleted } : sub) };
-                    }
-                    return task;
-                }));
+                setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, isCompleted: !sub.isCompleted } : sub) } : task));
             };
-
             const addSubTask = (taskId, title) => {
                 if (!title.trim()) return;
-                setTasks(tasks.map(task => {
-                    if (task.id === taskId) {
-                        return { ...task, subTasks: [...task.subTasks, { id: "sub_" + Date.now(), title, isCompleted: false }] };
-                    }
-                    return task;
-                }));
+                setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: [...task.subTasks, { id: "sub_" + Date.now(), title, isCompleted: false }] } : task));
             };
-
             const deleteSubTask = (taskId, subTaskId) => {
-                setTasks(tasks.map(task => {
-                    if (task.id === taskId) {
-                        return { ...task, subTasks: task.subTasks.filter(sub => sub.id !== subTaskId) };
-                    }
-                    return task;
-                }));
+                setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.filter(sub => sub.id !== subTaskId) } : task));
                 const updatedPlan = { ...weeklyPlan };
-                Object.keys(updatedPlan).forEach(day => {
-                    updatedPlan[day] = updatedPlan[day].filter(item => item.subTaskId !== subTaskId);
-                });
+                Object.keys(updatedPlan).forEach(day => { updatedPlan[day] = updatedPlan[day].filter(item => item.subTaskId !== subTaskId); });
                 setWeeklyPlan(updatedPlan);
             };
 
+            // YENİ: Haftalık Plan Fonksiyonları
             const addToWeeklyPlan = (day, taskId, subTaskId = null) => {
-                const newItem = { id: "wp_" + Date.now(), taskId, subTaskId };
+                // Artık haftalık planın içine kendi "bağımsız durumunu (status)" da koyuyoruz.
+                const newItem = { id: "wp_" + Date.now(), taskId, subTaskId, status: "Not Started" };
                 setWeeklyPlan({ ...weeklyPlan, [day]: [...weeklyPlan[day], newItem] });
                 setPlanningDay(null);
+            };
+
+            const updateWeeklyItemStatus = (day, itemId, status) => {
+                // Sadece o günkü o spesifik kutucuğun statüsünü değiştirir.
+                setWeeklyPlan({
+                    ...weeklyPlan,
+                    [day]: weeklyPlan[day].map(item => item.id === itemId ? { ...item, status } : item)
+                });
             };
 
             const removeFromWeeklyPlan = (day, itemId) => {
@@ -346,27 +335,50 @@
                                         const taskStatus = task.status || "Not Started";
                                         const taskPriority = task.priority || "Orta";
                                         const priorityColor = priorityStyles[taskPriority].text;
+                                        
+                                        // Totally Done ise görev yeşilimsi ve üstü çizili olacak
+                                        const isDone = task.isTotallyDone || false;
 
                                         return (
-                                            <div key={task.id} onClick={() => setSelectedTaskId(task.id)} className="group flex items-center justify-between p-3 bg-white border border-[#e8e8e8] rounded-md hover:border-neutral-400 shadow-sm cursor-pointer transition">
-                                                <div className="flex items-center space-x-3 truncate flex-1">
-                                                    <span style={{ backgroundColor: catConfig.color, color: catConfig.text }} className="px-2 py-0.5 rounded text-xs font-semibold shrink-0">{task.category}</span>
-                                                    <span className="font-medium text-sm text-[#37352f] truncate group-hover:text-blue-600">{task.title}</span>
+                                            <div 
+                                                key={task.id} 
+                                                onClick={() => setSelectedTaskId(task.id)} 
+                                                className={`group flex items-center justify-between p-3 bg-white border ${isDone ? 'border-green-300 bg-green-50/40 opacity-80' : 'border-[#e8e8e8] hover:border-neutral-400'} rounded-md shadow-sm cursor-pointer transition-all`}
+                                            >
+                                                <div className="flex items-center space-x-4 truncate flex-1">
+                                                    {/* YENİ: Totally Done Master Checkbox */}
+                                                    <input 
+                                                        type="checkbox"
+                                                        checked={isDone}
+                                                        onClick={(e) => e.stopPropagation()} 
+                                                        onChange={(e) => { e.stopPropagation(); toggleTotallyDone(task.id); }}
+                                                        className="master-checkbox shrink-0"
+                                                        title="Görevi Tamamen Bitir"
+                                                    />
+                                                    
+                                                    <span style={{ backgroundColor: catConfig.color, color: catConfig.text }} className={`px-2 py-0.5 rounded text-xs font-semibold shrink-0 ${isDone ? 'opacity-60' : ''}`}>{task.category}</span>
+                                                    <span className={`font-medium text-sm truncate transition-all ${isDone ? 'line-through text-neutral-400' : 'text-[#37352f] group-hover:text-blue-600'}`}>{task.title}</span>
                                                 </div>
                                                 
                                                 <div className="flex items-center space-x-3 shrink-0">
-                                                    <select 
-                                                        value={taskStatus}
-                                                        onClick={(e) => e.stopPropagation()} 
-                                                        onChange={(e) => { e.stopPropagation(); updateTaskStatus(task.id, e.target.value); }}
-                                                        className={`status-select text-[11px] font-semibold border rounded-full px-2.5 py-0.5 outline-none cursor-pointer transition ${statusStyles[taskStatus]}`}
-                                                    >
-                                                        {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                                                    </select>
+                                                    {!isDone && (
+                                                        <>
+                                                            <select 
+                                                                value={taskStatus}
+                                                                onClick={(e) => e.stopPropagation()} 
+                                                                onChange={(e) => { e.stopPropagation(); updateTaskStatus(task.id, e.target.value); }}
+                                                                className={`status-select text-[11px] font-semibold border rounded-full px-2.5 py-0.5 outline-none cursor-pointer transition ${statusStyles[taskStatus]}`}
+                                                            >
+                                                                {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                                                            </select>
+                                                            
+                                                            <span style={{ color: priorityColor }} className="text-[11px] font-bold border border-transparent px-1">{taskPriority}</span>
+                                                        </>
+                                                    )}
                                                     
-                                                    <span style={{ color: priorityColor }} className="text-[11px] font-bold border border-transparent px-1">{taskPriority}</span>
+                                                    {isDone && <span className="text-xs font-bold text-green-600 px-2">TAMAMLANDI 🎉</span>}
                                                     
-                                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }} className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs font-semibold">Sil</button>
+                                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }} className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs font-semibold ml-2">Sil</button>
                                                 </div>
                                             </div>
                                         );
@@ -398,9 +410,13 @@
                                                     if (!parentTask) return null;
                                                     
                                                     const subTask = item.subTaskId ? parentTask.subTasks.find(s => s.id === item.subTaskId) : null;
-                                                    const taskStatus = parentTask.status || "Not Started";
+                                                    
+                                                    // YENİ: Artık kart kendi bağımsız statusünü okuyor (Eski kartlar için fallback: Not Started)
+                                                    const itemStatus = item.status || "Not Started";
+                                                    
                                                     const taskPriority = parentTask.priority || "Orta";
                                                     const pStyle = priorityStyles[taskPriority];
+                                                    const isTotallyDone = parentTask.isTotallyDone;
 
                                                     return (
                                                         <div 
@@ -412,7 +428,7 @@
                                                             onDragEnd={handleDragEnd}
                                                             onDragOver={(e) => e.preventDefault()}
                                                             style={{ backgroundColor: pStyle.bg, borderColor: pStyle.border }}
-                                                            className="draggable-card border rounded p-2.5 shadow-sm group hover:brightness-95 relative transition flex flex-col"
+                                                            className={`draggable-card border rounded p-2.5 shadow-sm group hover:brightness-95 relative transition flex flex-col ${isTotallyDone ? 'opacity-50 grayscale' : ''}`}
                                                         >
                                                             <button 
                                                                 onClick={(e) => { e.stopPropagation(); removeFromWeeklyPlan(day, item.id); }} 
@@ -421,26 +437,33 @@
                                                             
                                                             {subTask ? (
                                                                 <div className="pr-4 break-words mb-2 pointer-events-none">
-                                                                    <div className="text-[10px] opacity-60 line-through mb-0.5">{parentTask.title}</div>
-                                                                    <div className="text-xs font-semibold text-[#37352f] leading-snug">
+                                                                    <div className={`text-[10px] opacity-60 line-through mb-0.5`}>{parentTask.title}</div>
+                                                                    <div className={`text-xs font-semibold text-[#37352f] leading-snug ${isTotallyDone ? 'line-through' : ''}`}>
                                                                         🔹 {subTask.title}
                                                                     </div>
                                                                 </div>
                                                             ) : (
-                                                                <div className="text-xs font-semibold text-[#37352f] leading-snug pr-4 break-words mb-2 pointer-events-none">
+                                                                <div className={`text-xs font-semibold text-[#37352f] leading-snug pr-4 break-words mb-2 pointer-events-none ${isTotallyDone ? 'line-through' : ''}`}>
                                                                     📌 {parentTask.title}
                                                                 </div>
                                                             )}
 
                                                             <div className="mt-auto pt-1 border-t border-black/5 flex justify-between items-center">
-                                                                <select 
-                                                                    value={taskStatus}
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                    onChange={(e) => { e.stopPropagation(); updateTaskStatus(parentTask.id, e.target.value); }}
-                                                                    className={`status-select text-[9px] font-bold border rounded-full px-1.5 py-0.5 outline-none cursor-pointer ${statusStyles[taskStatus]}`}
-                                                                >
-                                                                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                                                                </select>
+                                                                {isTotallyDone ? (
+                                                                    <span className="text-[9px] font-bold text-green-700">TÜMÜ BİTTİ</span>
+                                                                ) : (
+                                                                    <select 
+                                                                        value={itemStatus}
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                        
+                                                                        // YENİ: Artık ana taskı değil, o günkü spesifik itemı güncelliyor
+                                                                        onChange={(e) => { e.stopPropagation(); updateWeeklyItemStatus(day, item.id, e.target.value); }}
+                                                                        
+                                                                        className={`status-select text-[9px] font-bold border rounded-full px-1.5 py-0.5 outline-none cursor-pointer ${statusStyles[itemStatus]}`}
+                                                                    >
+                                                                        {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                                                                    </select>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     );
@@ -461,7 +484,8 @@
                                             <select 
                                                 value={currentSelectedTask.status || "Not Started"}
                                                 onChange={(e) => updateTaskStatus(currentSelectedTask.id, e.target.value)}
-                                                className={`status-select text-xs font-semibold border rounded-md px-2 py-1 outline-none cursor-pointer ${statusStyles[currentSelectedTask.status || "Not Started"]}`}
+                                                disabled={currentSelectedTask.isTotallyDone}
+                                                className={`status-select text-xs font-semibold border rounded-md px-2 py-1 outline-none cursor-pointer ${statusStyles[currentSelectedTask.status || "Not Started"]} ${currentSelectedTask.isTotallyDone ? 'opacity-50' : ''}`}
                                             >
                                                 {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                                             </select>
@@ -477,12 +501,22 @@
                                         <button onClick={() => setSelectedTaskId(null)} className="text-neutral-400 hover:text-neutral-600 text-xl">✕</button>
                                     </div>
 
-                                    {/* YENİ: Editlenebilir Ana Başlık (Input gibi görünmez) */}
+                                    {/* YENİ: Side Peek Totally Done Uyarısı/Butonu */}
+                                    <div className="flex items-center space-x-3 mb-4 bg-green-50 p-3 rounded-md border border-green-200">
+                                        <input 
+                                            type="checkbox"
+                                            checked={currentSelectedTask.isTotallyDone || false}
+                                            onChange={() => toggleTotallyDone(currentSelectedTask.id)}
+                                            className="master-checkbox shrink-0"
+                                        />
+                                        <span className="text-xs font-bold text-green-800">Bu Görevi Tamamen Bitir</span>
+                                    </div>
+
                                     <input 
                                         type="text" 
                                         value={currentSelectedTask.title}
                                         onChange={(e) => updateTaskTitle(currentSelectedTask.id, e.target.value)}
-                                        className="text-xl font-bold text-[#37352f] mb-2 w-full bg-transparent border border-transparent hover:border-neutral-200 focus:bg-white focus:border-blue-400 focus:outline-none rounded px-1 -ml-1 transition-all"
+                                        className={`text-xl font-bold mb-2 w-full bg-transparent border border-transparent hover:border-neutral-200 focus:bg-white focus:border-blue-400 focus:outline-none rounded px-1 -ml-1 transition-all ${currentSelectedTask.isTotallyDone ? 'line-through text-neutral-400' : 'text-[#37352f]'}`}
                                     />
                                     
                                     <textarea 
@@ -495,7 +529,7 @@
                                     <h3 className="text-xs font-bold uppercase text-neutral-400 mb-2">📋 Alt Adımlar</h3>
                                     <input type="text" placeholder="+ Alt adım ekle (Enter)" onKeyDown={(e) => { if (e.key === 'Enter') { addSubTask(currentSelectedTask.id, e.target.value); e.target.value = ""; } }} className="w-full bg-neutral-50 border border-neutral-200 rounded px-3 py-1.5 text-xs mb-3 focus:outline-none focus:border-blue-400" />
                                     
-                                    <div className="flex-1 overflow-y-auto space-y-1.5">
+                                    <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
                                         {currentSelectedTask.subTasks.map(sub => (
                                             <div key={sub.id} className="flex items-center justify-between p-2 rounded hover:bg-neutral-50 group border border-transparent focus-within:border-neutral-200 focus-within:bg-white transition-all">
                                                 <div className="flex items-center space-x-2 flex-1">
@@ -524,22 +558,26 @@
                                         <button onClick={() => setPlanningDay(null)}>✕</button>
                                     </div>
                                     <div className="flex-1 overflow-y-auto space-y-4">
-                                        {tasks.map(task => (
-                                            <div key={task.id} className="border p-2 bg-neutral-50 rounded">
-                                                <div className="flex justify-between items-center mb-2">
-                                                    <span className="text-xs font-bold truncate max-w-[200px]">{task.title}</span>
-                                                    <button onClick={() => addToWeeklyPlan(planningDay, task.id)} className="bg-neutral-800 text-white text-[10px] px-2 py-0.5 rounded hover:bg-neutral-700">Ekle</button>
+                                        {tasks.filter(t => !t.isTotallyDone).length === 0 ? (
+                                            <p className="text-xs text-center py-4 text-neutral-400">Atanacak aktif görev yok.</p>
+                                        ) : (
+                                            tasks.filter(t => !t.isTotallyDone).map(task => (
+                                                <div key={task.id} className="border p-2 bg-neutral-50 rounded">
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <span className="text-xs font-bold truncate max-w-[200px]">{task.title}</span>
+                                                        <button onClick={() => addToWeeklyPlan(planningDay, task.id)} className="bg-neutral-800 text-white text-[10px] px-2 py-0.5 rounded hover:bg-neutral-700">Ekle</button>
+                                                    </div>
+                                                    <div className="pl-2 border-l border-neutral-200 space-y-1">
+                                                        {task.subTasks.map(sub => (
+                                                            <div key={sub.id} className="flex justify-between text-[11px] items-center">
+                                                                <span className="truncate">{sub.title}</span>
+                                                                <button onClick={() => addToWeeklyPlan(planningDay, task.id, sub.id)} className="text-blue-600 font-semibold hover:underline">Adımı Ekle</button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                                <div className="pl-2 border-l border-neutral-200 space-y-1">
-                                                    {task.subTasks.map(sub => (
-                                                        <div key={sub.id} className="flex justify-between text-[11px] items-center">
-                                                            <span className="truncate">{sub.title}</span>
-                                                            <button onClick={() => addToWeeklyPlan(planningDay, task.id, sub.id)} className="text-blue-600 font-semibold hover:underline">Adımı Ekle</button>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ))}
+                                            ))
+                                        )}
                                     </div>
                                 </div>
                             </div>
