@@ -79,7 +79,7 @@
                 return saved ? JSON.parse(saved) : {};
             });
 
-            const [activeView, setActiveView] = useState("tasks");
+            const [activeView, setActiveView] = useState("tasks"); // "tasks", "weekly", "habits", "settings" eklendi
             const [selectedTaskId, setSelectedTaskId] = useState(null);
             const [filterCategory, setFilterCategory] = useState("Hepsi");
             const [planningDay, setPlanningDay] = useState(null);
@@ -101,12 +101,68 @@
 
             const dragItem = useRef(null);
             const dragOverItem = useRef(null);
+            const fileInputRef = useRef(null); // Dosya yükleme referansı
 
             useEffect(() => { localStorage.setItem("notion_categories", JSON.stringify(categories)); }, [categories]);
             useEffect(() => { localStorage.setItem("notion_tasks", JSON.stringify(tasks)); }, [tasks]);
             useEffect(() => { localStorage.setItem("notion_weekly_plan", JSON.stringify(weeklyPlan)); }, [weeklyPlan]);
             useEffect(() => { localStorage.setItem("notion_habits", JSON.stringify(habits)); }, [habits]);
             useEffect(() => { localStorage.setItem("notion_habit_logs", JSON.stringify(habitLogs)); }, [habitLogs]);
+
+            // ==========================================
+            // YENİ: İÇE/DIŞA AKTAR (EXPORT/IMPORT) İŞLEMLERİ
+            // ==========================================
+            
+            const exportData = () => {
+                // Tüm dataları tek bir objede topluyoruz
+                const backupData = {
+                    categories,
+                    tasks,
+                    weeklyPlan,
+                    habits,
+                    habitLogs
+                };
+                
+                // Objeyi string'e (metne) çevirip bir Blob oluşturuyoruz
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                
+                // İnen dosyanın adı (örn: task-planner-backup-2026-07-09.json)
+                const date = new Date().toISOString().slice(0, 10);
+                downloadAnchorNode.setAttribute("download", `task-planner-backup-${date}.json`);
+                
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+            };
+
+            const importData = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        
+                        // Dosyanın içindeki verileri okuyup State'lere yazıyoruz
+                        if(importedData.categories) setCategories(importedData.categories);
+                        if(importedData.tasks) setTasks(importedData.tasks);
+                        if(importedData.weeklyPlan) setWeeklyPlan(importedData.weeklyPlan);
+                        if(importedData.habits) setHabits(importedData.habits);
+                        if(importedData.habitLogs) setHabitLogs(importedData.habitLogs);
+                        
+                        alert("Veriler başarıyla yüklendi! Çalışma alanınız güncellendi. 🎉");
+                        event.target.value = ""; // Inputu sıfırla ki aynı dosyayı tekrar yükleyebilsin
+                    } catch (error) {
+                        alert("Hata: Yüklediğiniz dosya geçerli bir yedekleme (JSON) formatında değil.");
+                    }
+                };
+                reader.readAsText(file);
+            };
+
+            // ==========================================
 
             const handleDragStart = (e, day, index) => { dragItem.current = { day, index }; setTimeout(() => { e.target.style.opacity = '0.4'; }, 0); };
             const handleDragEnter = (e, day, index) => { dragOverItem.current = { day, index }; };
@@ -222,10 +278,9 @@
             const activeHabit = habits.find(h => h.id === selectedHabitId);
 
             return (
-                // flex-col md:flex-row eklendi: Mobilde alt alta, PC'de yan yana
                 <div className="flex flex-col md:flex-row h-screen overflow-hidden select-none">
                     
-                    {/* SIDEBAR - Responsive Update */}
+                    {/* SIDEBAR */}
                     <div className="w-full md:w-64 bg-[#f3f3f2] md:border-r border-b border-[#e8e8e8] flex flex-col justify-between p-3 shrink-0 z-10">
                         <div>
                             <div className="hidden md:flex items-center space-x-2 px-2 py-3 mb-4 rounded-md hover:bg-[#e8e8e7] cursor-pointer transition-colors">
@@ -233,7 +288,6 @@
                                 <span className="font-semibold text-sm text-[#37352f]">Çalışma Alanım</span>
                             </div>
                             
-                            {/* Mobilde yan yana scroll olan menü, PC'de alt alta */}
                             <nav className="flex md:flex-col space-x-2 md:space-x-0 md:space-y-1 overflow-x-auto pb-1 md:pb-0 scrollbar-hide">
                                 <button onClick={() => setActiveView("tasks")} className={`btn-press flex-1 md:w-full flex items-center justify-center md:justify-start space-x-2 px-3 py-2 text-sm font-medium rounded-md transition-all whitespace-nowrap ${activeView === 'tasks' ? 'bg-[#e8e8e7] text-[#37352f]' : 'text-[#64625d] hover:bg-[#e8e8e7]'}`}>
                                     <span>Tüm Görevler</span>
@@ -243,6 +297,10 @@
                                 </button>
                                 <button onClick={() => { setActiveView("habits"); if(!selectedHabitId && habits.length > 0) setSelectedHabitId(habits[0].id); }} className={`btn-press flex-1 md:w-full flex items-center justify-center md:justify-start space-x-2 px-3 py-2 text-sm font-medium rounded-md transition-all whitespace-nowrap ${activeView === 'habits' ? 'bg-[#e8e8e7] text-[#37352f]' : 'text-[#64625d] hover:bg-[#e8e8e7]'}`}>
                                     <span>Alışkanlıklar</span>
+                                </button>
+                                {/* YENİ: Ayarlar Sekmesi */}
+                                <button onClick={() => setActiveView("settings")} className={`btn-press flex-1 md:w-full flex items-center justify-center md:justify-start space-x-2 px-3 py-2 text-sm font-medium rounded-md transition-all whitespace-nowrap ${activeView === 'settings' ? 'bg-[#e8e8e7] text-[#37352f]' : 'text-[#64625d] hover:bg-[#e8e8e7]'}`}>
+                                    <span>⚙️ Ayarlar</span>
                                 </button>
                             </nav>
                         </div>
@@ -283,7 +341,6 @@
                                     )}
                                 </div>
 
-                                {/* Form Grid Update for Mobile (grid-cols-1) */}
                                 {showAddForm && (
                                     <form onSubmit={handleAddTask} className="bg-white border border-[#e8e8e8] rounded-lg p-4 md:p-5 mb-6 shadow-sm space-y-4 animate-modal">
                                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -367,8 +424,6 @@
                         {activeView === "weekly" && (
                             <div className="flex-1 overflow-x-auto overflow-y-auto p-4 md:p-10 animate-modal">
                                 <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#37352f] mb-4 md:mb-6 max-w-7xl mx-auto">📅 Haftalık Çizelge</h1>
-                                
-                                {/* Responsive Grid Update: grid-cols-1 on mobile, grid-cols-7 on desktop, no min-w */}
                                 <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 lg:gap-3 max-w-7xl mx-auto">
                                     {DAYS_OF_WEEK.map(day => (
                                         <div 
@@ -446,11 +501,9 @@
                             </div>
                         )}
 
-                        {/* YENİ VIEW 3: ALIŞKANLIKLAR (HABITS) TAKVİMİ */}
+                        {/* VIEW 3: ALIŞKANLIKLAR (HABITS) */}
                         {activeView === "habits" && (
                             <div className="flex-1 flex flex-col md:flex-row overflow-hidden animate-modal">
-                                
-                                {/* Alışkanlıklar Sol Menüsü - Responsive */}
                                 <div className="w-full md:w-72 bg-white border-b md:border-b-0 md:border-r border-neutral-200 p-4 md:p-6 overflow-y-auto shrink-0 max-h-64 md:max-h-full">
                                     <h2 className="text-lg font-bold text-[#37352f] mb-4">🌱 Alışkanlıklarım</h2>
                                     
@@ -489,7 +542,6 @@
                                     </div>
                                 </div>
 
-                                {/* Takvim Alanı (Sağ Taraf) */}
                                 <div className="flex-1 bg-[#fbfbfa] p-4 md:p-10 overflow-y-auto">
                                     {!activeHabit ? (
                                         <div className="h-full flex flex-col items-center justify-center text-neutral-400">
@@ -557,8 +609,66 @@
                             </div>
                         )}
 
-                        {/* SIDE PEEK PANELİ (Tasks İçin) - Responsive Update */}
-                        <div className={`fixed top-0 right-0 h-full w-full md:w-[400px] bg-white border-l border-[#e8e8e8] shadow-2xl transform transition-transform duration-300 z-50 flex flex-col ${currentSelectedTask && activeView !== "habits" ? 'translate-x-0' : 'translate-x-full'}`}>
+                        {/* YENİ VIEW 4: AYARLAR VE YEDEKLEME (EXPORT / IMPORT) */}
+                        {activeView === "settings" && (
+                            <div className="flex-1 overflow-y-auto p-4 md:p-10 max-w-3xl w-full mx-auto animate-modal">
+                                <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#37352f] mb-2">⚙️ Ayarlar & Veri Yönetimi</h1>
+                                <p className="text-sm text-neutral-500 mb-8">
+                                    Verileriniz cihazınızın hafızasında (LocalStorage) tutulmaktadır. Verilerinizi kaybetmemek veya farklı bir cihaza (örn: telefona) aktarmak için bu araçları kullanabilirsiniz.
+                                </p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    
+                                    {/* Dışa Aktar (Export) Kartı */}
+                                    <div className="bg-white border border-neutral-200 p-6 rounded-xl shadow-sm flex flex-col items-center text-center">
+                                        <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-3xl mb-4">
+                                            📥
+                                        </div>
+                                        <h3 className="font-bold text-[#37352f] mb-2">Verileri Dışa Aktar (Yedekle)</h3>
+                                        <p className="text-xs text-neutral-500 mb-6 flex-1">
+                                            Tüm görevlerinizi, haftalık planlarınızı ve alışkanlıklarınızı tek bir .json dosyası olarak bilgisayarınıza veya telefonunuza indirin.
+                                        </p>
+                                        <button 
+                                            onClick={exportData}
+                                            className="btn-press w-full bg-neutral-800 text-white font-medium py-2.5 rounded hover:bg-neutral-700 transition-colors"
+                                        >
+                                            Verilerimi İndir
+                                        </button>
+                                    </div>
+
+                                    {/* İçe Aktar (Import) Kartı */}
+                                    <div className="bg-white border border-neutral-200 p-6 rounded-xl shadow-sm flex flex-col items-center text-center">
+                                        <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center text-3xl mb-4">
+                                            📤
+                                        </div>
+                                        <h3 className="font-bold text-[#37352f] mb-2">Verileri İçe Aktar (Yükle)</h3>
+                                        <p className="text-xs text-neutral-500 mb-6 flex-1">
+                                            Önceden indirdiğiniz veya başka cihazdan gönderdiğiniz .json formatındaki yedek dosyasını buraya yükleyerek çalışma alanınızı geri getirin.
+                                        </p>
+                                        
+                                        {/* Gizli Dosya Seçici */}
+                                        <input 
+                                            type="file" 
+                                            accept=".json"
+                                            ref={fileInputRef}
+                                            onChange={importData}
+                                            className="hidden"
+                                        />
+                                        
+                                        <button 
+                                            onClick={() => fileInputRef.current.click()}
+                                            className="btn-press w-full bg-green-600 text-white font-medium py-2.5 rounded hover:bg-green-700 transition-colors"
+                                        >
+                                            Yedek Dosyası Seç (.json)
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        )}
+
+                        {/* SIDE PEEK PANELİ (Tasks İçin) */}
+                        <div className={`fixed top-0 right-0 h-full w-full md:w-[400px] bg-white border-l border-[#e8e8e8] shadow-2xl transform transition-transform duration-300 z-50 flex flex-col ${currentSelectedTask && activeView !== "habits" && activeView !== "settings" ? 'translate-x-0' : 'translate-x-full'}`}>
                             {currentSelectedTask && (
                                 <div className="flex-1 flex flex-col overflow-hidden p-4 md:p-6">
                                     <div className="flex justify-between items-center mb-4 mt-2 md:mt-0">
@@ -577,7 +687,6 @@
                                                 {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
                                             </select>
                                         </div>
-                                        {/* Kapat Butonunu Mobilde Daha Belirgin Yaptım */}
                                         <button onClick={() => setSelectedTaskId(null)} className="btn-press bg-neutral-100 md:bg-transparent rounded-full w-8 h-8 md:w-auto md:h-auto flex items-center justify-center text-neutral-600 hover:text-neutral-900 md:text-xl transition-colors">✕</button>
                                     </div>
 
@@ -617,7 +726,7 @@
                             )}
                         </div>
 
-                        {/* PLANLAMA MODALİ (Tasks İçin) - Responsive Update */}
+                        {/* PLANLAMA MODALİ (Tasks İçin) */}
                         {planningDay && (
                             <div className="animate-overlay fixed inset-0 bg-black/50 md:bg-black/30 flex items-end md:items-center justify-center z-50">
                                 <div className="animate-modal bg-white rounded-t-2xl md:rounded-lg p-5 w-full md:w-[400px] h-[70vh] md:max-h-[80vh] flex flex-col shadow-2xl">
