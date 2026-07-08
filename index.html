@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notion Style Task & Weekly Manager</title>
-
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏆</text></svg>">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
@@ -31,12 +28,13 @@
             padding-right: 20px;
         }
 
-        /* Sürüklenen kartın geçiş efektleri */
-        .draggable-card {
-            cursor: grab;
-        }
-        .draggable-card:active {
-            cursor: grabbing;
+        .draggable-card { cursor: grab; }
+        .draggable-card:active { cursor: grabbing; }
+
+        /* Inline edit için textarea görünümü */
+        .inline-textarea {
+            resize: none;
+            overflow: hidden;
         }
     </style>
 </head>
@@ -110,7 +108,6 @@
             const [showAddCategory, setShowAddCategory] = useState(false);
             const [newCategoryName, setNewCategoryName] = useState("");
 
-            // SÜRÜKLE BIRAK (DRAG & DROP) REFERANSLARI
             const dragItem = useRef(null);
             const dragOverItem = useRef(null);
 
@@ -118,20 +115,14 @@
             useEffect(() => { localStorage.setItem("notion_tasks", JSON.stringify(tasks)); }, [tasks]);
             useEffect(() => { localStorage.setItem("notion_weekly_plan", JSON.stringify(weeklyPlan)); }, [weeklyPlan]);
 
-            // --- SÜRÜKLE BIRAK FONKSİYONLARI ---
             const handleDragStart = (e, day, index) => {
                 dragItem.current = { day, index };
-                // Sürüklenen öğeyi hafif transparan yapalım
                 setTimeout(() => { e.target.style.opacity = '0.4'; }, 0);
             };
 
-            const handleDragEnter = (e, day, index) => {
-                // Fare bir kartın üstüne geldiğinde o anki konumu kaydedelim
-                dragOverItem.current = { day, index };
-            };
+            const handleDragEnter = (e, day, index) => { dragOverItem.current = { day, index }; };
 
             const handleDragEnd = (e) => {
-                // Fare tuşu bırakıldığında (drop çalışsa da çalışmasa da) stili temizleyelim
                 e.target.style.opacity = '1';
                 dragItem.current = null;
                 dragOverItem.current = null;
@@ -143,29 +134,22 @@
 
                 const sourceDay = dragItem.current.day;
                 const sourceIndex = dragItem.current.index;
-                
-                // Eğer doğrudan bir kartın üstüne bırakıldıysa onun indexini al, 
-                // Eğer kartların değil boş alanın/kolonun üstüne bırakıldıysa en sona ekle.
                 let destIndex = weeklyPlan[targetDay].length;
+                
                 if (dragOverItem.current && dragOverItem.current.day === targetDay) {
                     destIndex = dragOverItem.current.index;
                 }
 
-                // Kendi üstüne bırakıldıysa bir şey yapma
                 if (sourceDay === targetDay && sourceIndex === destIndex) return;
 
-                // Haftalık planın kopyasını oluşturup veriyi yer değiştirelim
                 const newPlan = { ...weeklyPlan };
                 const itemToMove = newPlan[sourceDay][sourceIndex];
                 
-                // Eski yerinden çıkar
                 newPlan[sourceDay].splice(sourceIndex, 1);
-                // Yeni yerine ekle
                 newPlan[targetDay].splice(destIndex, 0, itemToMove);
                 
                 setWeeklyPlan(newPlan);
             };
-            // ------------------------------------
 
             const handleAddCategory = (e) => {
                 e.preventDefault();
@@ -204,6 +188,20 @@
 
             const updateTaskStatus = (taskId, status) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, status } : t)); };
             const updateTaskPriority = (taskId, priority) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, priority } : t)); };
+            
+            // YENİ: Ana görev açıklaması ve Alt görev başlığı güncelleme fonksiyonları
+            const updateTaskDetails = (taskId, details) => { 
+                setTasks(tasks.map(t => t.id === taskId ? { ...t, details } : t)); 
+            };
+
+            const updateSubTaskTitle = (taskId, subTaskId, title) => {
+                setTasks(tasks.map(task => {
+                    if (task.id === taskId) {
+                        return { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, title } : sub) };
+                    }
+                    return task;
+                }));
+            };
 
             const toggleSubTask = (taskId, subTaskId) => {
                 setTasks(tasks.map(task => {
@@ -379,9 +377,8 @@
                                     {DAYS_OF_WEEK.map(day => (
                                         <div 
                                             key={day} 
-                                            // Kolonun Sürükle Bırak (Drop) Olayları
-                                            onDragOver={(e) => e.preventDefault()} // Bırakmaya izin ver
-                                            onDrop={(e) => handleDrop(e, day)}     // Bırakıldığında çalışacak fonksiyon
+                                            onDragOver={(e) => e.preventDefault()}
+                                            onDrop={(e) => handleDrop(e, day)}
                                             className="bg-[#f7f7f5] rounded-xl p-3 border border-[#e8e8e8] flex flex-col h-[calc(100vh-180px)] transition-colors"
                                         >
                                             <div className="flex justify-between items-center mb-3 pb-1 border-b border-neutral-200">
@@ -389,7 +386,6 @@
                                                 <button onClick={() => setPlanningDay(day)} className="w-5 h-5 rounded hover:bg-neutral-200 flex items-center justify-center text-neutral-500 text-sm">+</button>
                                             </div>
                                             
-                                            {/* Günün Kartları Burada Listelenir */}
                                             <div className="space-y-2 flex-1 overflow-y-auto pr-1 pb-10">
                                                 {weeklyPlan[day]?.map((item, index) => {
                                                     const parentTask = tasks.find(t => t.id === item.taskId);
@@ -404,14 +400,11 @@
                                                         <div 
                                                             key={item.id} 
                                                             onClick={() => setSelectedTaskId(parentTask.id)}
-                                                            
-                                                            // KARTIN SÜRÜKLE BIRAK (DRAG) OLAYLARI
                                                             draggable
                                                             onDragStart={(e) => handleDragStart(e, day, index)}
                                                             onDragEnter={(e) => handleDragEnter(e, day, index)}
                                                             onDragEnd={handleDragEnd}
                                                             onDragOver={(e) => e.preventDefault()}
-
                                                             style={{ backgroundColor: pStyle.bg, borderColor: pStyle.border }}
                                                             className="draggable-card border rounded p-2.5 shadow-sm group hover:brightness-95 relative transition flex flex-col"
                                                         >
@@ -420,7 +413,6 @@
                                                                 className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-red-500 text-xs bg-white rounded-full w-4 h-4 flex items-center justify-center shadow"
                                                             >✕</button>
                                                             
-                                                            {/* Kart İçeriği */}
                                                             {subTask ? (
                                                                 <div className="pr-4 break-words mb-2 pointer-events-none">
                                                                     <div className="text-[10px] opacity-60 line-through mb-0.5">{parentTask.title}</div>
@@ -480,18 +472,32 @@
                                     </div>
 
                                     <h2 className="text-xl font-bold text-[#37352f] mb-2">{currentSelectedTask.title}</h2>
-                                    <div className="text-sm text-neutral-500 bg-neutral-50 p-3 rounded mb-6 whitespace-pre-wrap">{currentSelectedTask.details || "Detay yok..."}</div>
+                                    
+                                    {/* YENİ: Editlenebilir Description Textarea */}
+                                    <textarea 
+                                        value={currentSelectedTask.details}
+                                        onChange={(e) => updateTaskDetails(currentSelectedTask.id, e.target.value)}
+                                        placeholder="Görev detaylarını buraya ekleyebilirsin..."
+                                        className="w-full text-sm text-neutral-500 bg-neutral-50 p-3 rounded mb-6 border border-transparent hover:border-neutral-200 focus:bg-white focus:border-blue-400 focus:outline-none transition-all inline-textarea min-h-[80px]"
+                                    />
                                     
                                     <h3 className="text-xs font-bold uppercase text-neutral-400 mb-2">📋 Alt Adımlar</h3>
-                                    <input type="text" placeholder="+ Alt adım ekle (Enter)" onKeyDown={(e) => { if (e.key === 'Enter') { addSubTask(currentSelectedTask.id, e.target.value); e.target.value = ""; } }} className="w-full bg-neutral-50 border border-neutral-200 rounded px-3 py-1.5 text-xs mb-3" />
+                                    <input type="text" placeholder="+ Alt adım ekle (Enter)" onKeyDown={(e) => { if (e.key === 'Enter') { addSubTask(currentSelectedTask.id, e.target.value); e.target.value = ""; } }} className="w-full bg-neutral-50 border border-neutral-200 rounded px-3 py-1.5 text-xs mb-3 focus:outline-none focus:border-blue-400" />
+                                    
                                     <div className="flex-1 overflow-y-auto space-y-1.5">
                                         {currentSelectedTask.subTasks.map(sub => (
-                                            <div key={sub.id} className="flex items-center justify-between p-2 rounded hover:bg-neutral-50 group">
-                                                <label className="flex items-center space-x-2 cursor-pointer flex-1">
-                                                    <input type="checkbox" checked={sub.isCompleted} onChange={() => toggleSubTask(currentSelectedTask.id, sub.id)} className="rounded" />
-                                                    <span className={`text-xs ${sub.isCompleted ? 'line-through text-neutral-400' : 'text-neutral-700'}`}>{sub.title}</span>
-                                                </label>
-                                                <button onClick={() => deleteSubTask(currentSelectedTask.id, sub.id)} className="text-red-500 text-xs opacity-0 group-hover:opacity-100 font-bold">✕</button>
+                                            <div key={sub.id} className="flex items-center justify-between p-2 rounded hover:bg-neutral-50 group border border-transparent focus-within:border-neutral-200 focus-within:bg-white transition-all">
+                                                <div className="flex items-center space-x-2 flex-1">
+                                                    <input type="checkbox" checked={sub.isCompleted} onChange={() => toggleSubTask(currentSelectedTask.id, sub.id)} className="rounded cursor-pointer mt-0.5" />
+                                                    {/* YENİ: Editlenebilir Subtask Input */}
+                                                    <input 
+                                                        type="text" 
+                                                        value={sub.title}
+                                                        onChange={(e) => updateSubTaskTitle(currentSelectedTask.id, sub.id, e.target.value)}
+                                                        className={`text-xs bg-transparent border-none focus:outline-none w-full ${sub.isCompleted ? 'line-through text-neutral-400' : 'text-neutral-700'}`}
+                                                    />
+                                                </div>
+                                                <button onClick={() => deleteSubTask(currentSelectedTask.id, sub.id)} className="text-red-500 text-xs opacity-0 group-hover:opacity-100 font-bold ml-2">✕</button>
                                             </div>
                                         ))}
                                     </div>
@@ -512,13 +518,13 @@
                                             <div key={task.id} className="border p-2 bg-neutral-50 rounded">
                                                 <div className="flex justify-between items-center mb-2">
                                                     <span className="text-xs font-bold truncate max-w-[200px]">{task.title}</span>
-                                                    <button onClick={() => addToWeeklyPlan(planningDay, task.id)} className="bg-neutral-800 text-white text-[10px] px-2 py-0.5 rounded">Ekle</button>
+                                                    <button onClick={() => addToWeeklyPlan(planningDay, task.id)} className="bg-neutral-800 text-white text-[10px] px-2 py-0.5 rounded hover:bg-neutral-700">Ekle</button>
                                                 </div>
-                                                <div className="pl-2 border-l space-y-1">
+                                                <div className="pl-2 border-l border-neutral-200 space-y-1">
                                                     {task.subTasks.map(sub => (
-                                                        <div key={sub.id} className="flex justify-between text-[11px]">
-                                                            <span>{sub.title}</span>
-                                                            <button onClick={() => addToWeeklyPlan(planningDay, task.id, sub.id)} className="text-blue-600 font-semibold">Adımı Ekle</button>
+                                                        <div key={sub.id} className="flex justify-between text-[11px] items-center">
+                                                            <span className="truncate">{sub.title}</span>
+                                                            <button onClick={() => addToWeeklyPlan(planningDay, task.id, sub.id)} className="text-blue-600 font-semibold hover:underline">Adımı Ekle</button>
                                                         </div>
                                                     ))}
                                                 </div>
