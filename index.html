@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notion Style Task & Weekly Manager</title>
-
+    
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏆</text></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -34,7 +34,6 @@
         .draggable-card { cursor: grab; }
         .draggable-card:active { cursor: grabbing; }
 
-        /* Inline edit için textarea görünümü */
         .inline-textarea {
             resize: none;
             overflow: hidden;
@@ -192,7 +191,11 @@
             const updateTaskStatus = (taskId, status) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, status } : t)); };
             const updateTaskPriority = (taskId, priority) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, priority } : t)); };
             
-            // YENİ: Ana görev açıklaması ve Alt görev başlığı güncelleme fonksiyonları
+            // YENİ: Başlık düzenleme fonksiyonu eklendi
+            const updateTaskTitle = (taskId, title) => {
+                setTasks(tasks.map(t => t.id === taskId ? { ...t, title } : t));
+            };
+
             const updateTaskDetails = (taskId, details) => { 
                 setTasks(tasks.map(t => t.id === taskId ? { ...t, details } : t)); 
             };
@@ -474,9 +477,14 @@
                                         <button onClick={() => setSelectedTaskId(null)} className="text-neutral-400 hover:text-neutral-600 text-xl">✕</button>
                                     </div>
 
-                                    <h2 className="text-xl font-bold text-[#37352f] mb-2">{currentSelectedTask.title}</h2>
+                                    {/* YENİ: Editlenebilir Ana Başlık (Input gibi görünmez) */}
+                                    <input 
+                                        type="text" 
+                                        value={currentSelectedTask.title}
+                                        onChange={(e) => updateTaskTitle(currentSelectedTask.id, e.target.value)}
+                                        className="text-xl font-bold text-[#37352f] mb-2 w-full bg-transparent border border-transparent hover:border-neutral-200 focus:bg-white focus:border-blue-400 focus:outline-none rounded px-1 -ml-1 transition-all"
+                                    />
                                     
-                                    {/* YENİ: Editlenebilir Description Textarea */}
                                     <textarea 
                                         value={currentSelectedTask.details}
                                         onChange={(e) => updateTaskDetails(currentSelectedTask.id, e.target.value)}
@@ -492,7 +500,6 @@
                                             <div key={sub.id} className="flex items-center justify-between p-2 rounded hover:bg-neutral-50 group border border-transparent focus-within:border-neutral-200 focus-within:bg-white transition-all">
                                                 <div className="flex items-center space-x-2 flex-1">
                                                     <input type="checkbox" checked={sub.isCompleted} onChange={() => toggleSubTask(currentSelectedTask.id, sub.id)} className="rounded cursor-pointer mt-0.5" />
-                                                    {/* YENİ: Editlenebilir Subtask Input */}
                                                     <input 
                                                         type="text" 
                                                         value={sub.title}
