@@ -79,7 +79,7 @@
                 return saved ? JSON.parse(saved) : {};
             });
 
-            const [activeView, setActiveView] = useState("tasks"); // "tasks", "weekly", "habits", "settings" eklendi
+            const [activeView, setActiveView] = useState("tasks"); 
             const [selectedTaskId, setSelectedTaskId] = useState(null);
             const [filterCategory, setFilterCategory] = useState("Hepsi");
             const [planningDay, setPlanningDay] = useState(null);
@@ -101,7 +101,7 @@
 
             const dragItem = useRef(null);
             const dragOverItem = useRef(null);
-            const fileInputRef = useRef(null); // Dosya yükleme referansı
+            const fileInputRef = useRef(null);
 
             useEffect(() => { localStorage.setItem("notion_categories", JSON.stringify(categories)); }, [categories]);
             useEffect(() => { localStorage.setItem("notion_tasks", JSON.stringify(tasks)); }, [tasks]);
@@ -110,31 +110,28 @@
             useEffect(() => { localStorage.setItem("notion_habit_logs", JSON.stringify(habitLogs)); }, [habitLogs]);
 
             // ==========================================
-            // YENİ: İÇE/DIŞA AKTAR (EXPORT/IMPORT) İŞLEMLERİ
+            // GÜNCELLENMİŞ İÇE/DIŞA AKTAR (BLOB + HEALER)
             // ==========================================
             
             const exportData = () => {
-                // Tüm dataları tek bir objede topluyoruz
                 const backupData = {
-                    categories,
-                    tasks,
-                    weeklyPlan,
-                    habits,
-                    habitLogs
+                    categories, tasks, weeklyPlan, habits, habitLogs
                 };
                 
-                // Objeyi string'e (metne) çevirip bir Blob oluşturuyoruz
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-                const downloadAnchorNode = document.createElement('a');
-                downloadAnchorNode.setAttribute("href", dataStr);
+                // Karakter bozulmasını kesin olarak önleyen Blob (Binary) paketleme
+                const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
                 
-                // İnen dosyanın adı (örn: task-planner-backup-2026-07-09.json)
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", url);
+                
                 const date = new Date().toISOString().slice(0, 10);
                 downloadAnchorNode.setAttribute("download", `task-planner-backup-${date}.json`);
                 
                 document.body.appendChild(downloadAnchorNode);
                 downloadAnchorNode.click();
                 downloadAnchorNode.remove();
+                URL.revokeObjectURL(url); // Hafızayı temizle
             };
 
             const importData = (event) => {
@@ -146,15 +143,29 @@
                     try {
                         const importedData = JSON.parse(e.target.result);
                         
-                        // Dosyanın içindeki verileri okuyup State'lere yazıyoruz
                         if(importedData.categories) setCategories(importedData.categories);
                         if(importedData.tasks) setTasks(importedData.tasks);
-                        if(importedData.weeklyPlan) setWeeklyPlan(importedData.weeklyPlan);
                         if(importedData.habits) setHabits(importedData.habits);
                         if(importedData.habitLogs) setHabitLogs(importedData.habitLogs);
                         
+                        // HAFTALIK PLAN KURTARICI (Data Healer)
+                        if(importedData.weeklyPlan) {
+                            const wp = importedData.weeklyPlan;
+                            const safePlan = {
+                                "Pazartesi": wp["Pazartesi"] || [],
+                                // Bozulmuş olabilecek isimleri esnek hece takibi ile kurtarıyoruz
+                                "Salı": wp["Salı"] || wp[Object.keys(wp).find(k => k.includes("al"))] || [],
+                                "Çarşamba": wp["Çarşamba"] || wp[Object.keys(wp).find(k => k.includes("amba"))] || [],
+                                "Perşembe": wp["Perşembe"] || wp[Object.keys(wp).find(k => k.includes("embe"))] || [],
+                                "Cuma": wp["Cuma"] || [],
+                                "Cumartesi": wp["Cumartesi"] || [],
+                                "Pazar": wp["Pazar"] || []
+                            };
+                            setWeeklyPlan(safePlan);
+                        }
+                        
                         alert("Veriler başarıyla yüklendi! Çalışma alanınız güncellendi. 🎉");
-                        event.target.value = ""; // Inputu sıfırla ki aynı dosyayı tekrar yükleyebilsin
+                        event.target.value = ""; 
                     } catch (error) {
                         alert("Hata: Yüklediğiniz dosya geçerli bir yedekleme (JSON) formatında değil.");
                     }
@@ -298,7 +309,6 @@
                                 <button onClick={() => { setActiveView("habits"); if(!selectedHabitId && habits.length > 0) setSelectedHabitId(habits[0].id); }} className={`btn-press flex-1 md:w-full flex items-center justify-center md:justify-start space-x-2 px-3 py-2 text-sm font-medium rounded-md transition-all whitespace-nowrap ${activeView === 'habits' ? 'bg-[#e8e8e7] text-[#37352f]' : 'text-[#64625d] hover:bg-[#e8e8e7]'}`}>
                                     <span>Alışkanlıklar</span>
                                 </button>
-                                {/* YENİ: Ayarlar Sekmesi */}
                                 <button onClick={() => setActiveView("settings")} className={`btn-press flex-1 md:w-full flex items-center justify-center md:justify-start space-x-2 px-3 py-2 text-sm font-medium rounded-md transition-all whitespace-nowrap ${activeView === 'settings' ? 'bg-[#e8e8e7] text-[#37352f]' : 'text-[#64625d] hover:bg-[#e8e8e7]'}`}>
                                     <span>⚙️ Ayarlar</span>
                                 </button>
@@ -424,6 +434,7 @@
                         {activeView === "weekly" && (
                             <div className="flex-1 overflow-x-auto overflow-y-auto p-4 md:p-10 animate-modal">
                                 <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#37352f] mb-4 md:mb-6 max-w-7xl mx-auto">📅 Haftalık Çizelge</h1>
+                                
                                 <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 lg:gap-3 max-w-7xl mx-auto">
                                     {DAYS_OF_WEEK.map(day => (
                                         <div 
@@ -504,6 +515,7 @@
                         {/* VIEW 3: ALIŞKANLIKLAR (HABITS) */}
                         {activeView === "habits" && (
                             <div className="flex-1 flex flex-col md:flex-row overflow-hidden animate-modal">
+                                
                                 <div className="w-full md:w-72 bg-white border-b md:border-b-0 md:border-r border-neutral-200 p-4 md:p-6 overflow-y-auto shrink-0 max-h-64 md:max-h-full">
                                     <h2 className="text-lg font-bold text-[#37352f] mb-4">🌱 Alışkanlıklarım</h2>
                                     
@@ -609,7 +621,7 @@
                             </div>
                         )}
 
-                        {/* YENİ VIEW 4: AYARLAR VE YEDEKLEME (EXPORT / IMPORT) */}
+                        {/* VIEW 4: AYARLAR VE YEDEKLEME (EXPORT / IMPORT) */}
                         {activeView === "settings" && (
                             <div className="flex-1 overflow-y-auto p-4 md:p-10 max-w-3xl w-full mx-auto animate-modal">
                                 <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#37352f] mb-2">⚙️ Ayarlar & Veri Yönetimi</h1>
@@ -619,7 +631,6 @@
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     
-                                    {/* Dışa Aktar (Export) Kartı */}
                                     <div className="bg-white border border-neutral-200 p-6 rounded-xl shadow-sm flex flex-col items-center text-center">
                                         <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-3xl mb-4">
                                             📥
@@ -636,7 +647,6 @@
                                         </button>
                                     </div>
 
-                                    {/* İçe Aktar (Import) Kartı */}
                                     <div className="bg-white border border-neutral-200 p-6 rounded-xl shadow-sm flex flex-col items-center text-center">
                                         <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center text-3xl mb-4">
                                             📤
@@ -646,12 +656,8 @@
                                             Önceden indirdiğiniz veya başka cihazdan gönderdiğiniz .json formatındaki yedek dosyasını buraya yükleyerek çalışma alanınızı geri getirin.
                                         </p>
                                         
-                                        {/* Gizli Dosya Seçici */}
                                         <input 
-                                            type="file" 
-                                            accept=".json"
-                                            ref={fileInputRef}
-                                            onChange={importData}
+                                            type="file" accept=".json" ref={fileInputRef} onChange={importData}
                                             className="hidden"
                                         />
                                         
