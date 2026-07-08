@@ -6,9 +6,7 @@
     <title>Notion Style Task & Weekly Manager</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏆</text></svg>">
-    
     <link rel="stylesheet" href="style.css">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
@@ -52,8 +50,10 @@
         };
 
         const DAYS_OF_WEEK = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
+        const MONTH_NAMES = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 
         function App() {
+            // --- STATE YÖNETİMİ ---
             const [categories, setCategories] = useState(() => {
                 const saved = localStorage.getItem("notion_categories");
                 return saved ? JSON.parse(saved) : defaultCategories;
@@ -70,59 +70,118 @@
                 return saved ? JSON.parse(saved) : initial;
             });
 
-            const [activeView, setActiveView] = useState("tasks");
+            // YENİ: Alışkanlık Stateleri
+            const [habits, setHabits] = useState(() => {
+                const saved = localStorage.getItem("notion_habits");
+                return saved ? JSON.parse(saved) : [{ id: "habit-1", title: "Su İç (2.5L)" }];
+            });
+
+            const [habitLogs, setHabitLogs] = useState(() => {
+                const saved = localStorage.getItem("notion_habit_logs");
+                return saved ? JSON.parse(saved) : {};
+            });
+
+            const [activeView, setActiveView] = useState("tasks"); // "tasks", "weekly", "habits"
+            
+            // Task Formları ve Seçimleri
             const [selectedTaskId, setSelectedTaskId] = useState(null);
             const [filterCategory, setFilterCategory] = useState("Hepsi");
             const [planningDay, setPlanningDay] = useState(null);
-
             const [showAddForm, setShowAddForm] = useState(false);
             const [newTitle, setNewTitle] = useState("");
             const [newCategory, setNewCategory] = useState(categories[0]?.name || "");
             const [newDetails, setNewDetails] = useState("");
             const [newPriority, setNewPriority] = useState("Orta");
             const [newStatus, setNewStatus] = useState("Not Started");
-
             const [showAddCategory, setShowAddCategory] = useState(false);
             const [newCategoryName, setNewCategoryName] = useState("");
+
+            // Habit UI Stateleri
+            const [selectedHabitId, setSelectedHabitId] = useState(habits[0]?.id || null);
+            const [showAddHabit, setShowAddHabit] = useState(false);
+            const [newHabitTitle, setNewHabitTitle] = useState("");
+            const [currentMonth, setCurrentMonth] = useState(new Date());
 
             const dragItem = useRef(null);
             const dragOverItem = useRef(null);
 
+            // --- LOCALSTORAGE SENKRONİZASYONU ---
             useEffect(() => { localStorage.setItem("notion_categories", JSON.stringify(categories)); }, [categories]);
             useEffect(() => { localStorage.setItem("notion_tasks", JSON.stringify(tasks)); }, [tasks]);
             useEffect(() => { localStorage.setItem("notion_weekly_plan", JSON.stringify(weeklyPlan)); }, [weeklyPlan]);
+            useEffect(() => { localStorage.setItem("notion_habits", JSON.stringify(habits)); }, [habits]);
+            useEffect(() => { localStorage.setItem("notion_habit_logs", JSON.stringify(habitLogs)); }, [habitLogs]);
 
-            // --- DRAG & DROP LOGIC ---
-            const handleDragStart = (e, day, index) => {
-                dragItem.current = { day, index };
-                setTimeout(() => { e.target.style.opacity = '0.4'; }, 0);
+            // --- HABIT (ALIŞKANLIK) FONKSİYONLARI ---
+            const handleAddHabit = (e) => {
+                e.preventDefault();
+                if (!newHabitTitle.trim()) return;
+                const newHabit = { id: "habit_" + Date.now(), title: newHabitTitle };
+                setHabits([...habits, newHabit]);
+                if (!selectedHabitId) setSelectedHabitId(newHabit.id);
+                setNewHabitTitle("");
+                setShowAddHabit(false);
             };
+
+            const handleDeleteHabit = (habitId) => {
+                if (window.confirm("Bu alışkanlığı silmek istediğinize emin misiniz?")) {
+                    setHabits(habits.filter(h => h.id !== habitId));
+                    if (selectedHabitId === habitId) setSelectedHabitId(habits.length > 1 ? habits[0].id : null);
+                }
+            };
+
+            const toggleHabitStatus = (habitId, dateStr) => {
+                setHabitLogs(prev => {
+                    const logs = prev[habitId] || {};
+                    const currentStatus = logs[dateStr];
+                    
+                    // Geçiş Mantığı: null -> "done" -> "failed" -> null
+                    let nextStatus = "done";
+                    if (currentStatus === "done") nextStatus = "failed";
+                    else if (currentStatus === "failed") nextStatus = null;
+
+                    const newLogs = { ...prev, [habitId]: { ...logs } };
+                    
+                    if (nextStatus) {
+                        newLogs[habitId][dateStr] = nextStatus;
+                    } else {
+                        delete newLogs[habitId][dateStr]; // Null ise hafızada tutmaya gerek yok (optimizasyon)
+                    }
+                    return newLogs;
+                });
+            };
+
+            const changeMonth = (offset) => {
+                setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1));
+            };
+
+            // Takvim Çizim Hesaplamaları
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            let firstDayIndex = new Date(year, month, 1).getDay();
+            firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1; // Pazartesiyi 0, Pazarı 6 yapmak için
+            
+            const blankDays = Array.from({ length: firstDayIndex });
+            const monthDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+
+            // --- TASK & DRAG DROP FONKSİYONLARI ---
+            const handleDragStart = (e, day, index) => { dragItem.current = { day, index }; setTimeout(() => { e.target.style.opacity = '0.4'; }, 0); };
             const handleDragEnter = (e, day, index) => { dragOverItem.current = { day, index }; };
-            const handleDragEnd = (e) => {
-                e.target.style.opacity = '1';
-                dragItem.current = null;
-                dragOverItem.current = null;
-            };
+            const handleDragEnd = (e) => { e.target.style.opacity = '1'; dragItem.current = null; dragOverItem.current = null; };
             const handleDrop = (e, targetDay) => {
                 e.preventDefault();
                 if (!dragItem.current) return;
-
                 const sourceDay = dragItem.current.day;
                 const sourceIndex = dragItem.current.index;
                 let destIndex = weeklyPlan[targetDay].length;
-                
-                if (dragOverItem.current && dragOverItem.current.day === targetDay) {
-                    destIndex = dragOverItem.current.index;
-                }
-
+                if (dragOverItem.current && dragOverItem.current.day === targetDay) { destIndex = dragOverItem.current.index; }
                 if (sourceDay === targetDay && sourceIndex === destIndex) return;
-
                 const newPlan = { ...weeklyPlan };
                 const itemToMove = newPlan[sourceDay][sourceIndex];
-                
                 newPlan[sourceDay].splice(sourceIndex, 1);
                 newPlan[targetDay].splice(destIndex, 0, itemToMove);
-                
                 setWeeklyPlan(newPlan);
             };
 
@@ -130,9 +189,7 @@
                 e.preventDefault();
                 const trimmedName = newCategoryName.trim();
                 if (!trimmedName) return;
-                if (categories.find(c => c.name.toLowerCase() === trimmedName.toLowerCase())) {
-                    alert("Bu kategori zaten mevcut!"); return;
-                }
+                if (categories.find(c => c.name.toLowerCase() === trimmedName.toLowerCase())) { alert("Bu kategori zaten mevcut!"); return; }
                 const randomColor = pastelColors[Math.floor(Math.random() * pastelColors.length)];
                 setCategories([...categories, { name: trimmedName, color: randomColor.color, text: randomColor.text }]);
                 setNewCategoryName(""); setShowAddCategory(false);
@@ -141,10 +198,7 @@
             const handleAddTask = (e) => {
                 e.preventDefault();
                 if (!newTitle.trim()) return;
-                const newTask = { 
-                    id: "task_" + Date.now(), title: newTitle, category: newCategory || categories[0].name, 
-                    details: newDetails, priority: newPriority, status: newStatus, isTotallyDone: false, subTasks: [] 
-                };
+                const newTask = { id: "task_" + Date.now(), title: newTitle, category: newCategory || categories[0].name, details: newDetails, priority: newPriority, status: newStatus, isTotallyDone: false, subTasks: [] };
                 setTasks([newTask, ...tasks]);
                 setNewTitle(""); setNewDetails(""); setNewPriority("Orta"); setNewStatus("Not Started"); setShowAddForm(false);
             };
@@ -154,9 +208,7 @@
                     setTasks(tasks.filter(t => t.id !== taskId));
                     if (selectedTaskId === taskId) setSelectedTaskId(null);
                     const updatedPlan = { ...weeklyPlan };
-                    Object.keys(updatedPlan).forEach(day => {
-                        updatedPlan[day] = updatedPlan[day].filter(item => item.taskId !== taskId);
-                    });
+                    Object.keys(updatedPlan).forEach(day => { updatedPlan[day] = updatedPlan[day].filter(item => item.taskId !== taskId); });
                     setWeeklyPlan(updatedPlan);
                 }
             };
@@ -165,21 +217,11 @@
             const updateTaskPriority = (taskId, priority) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, priority } : t)); };
             const updateTaskTitle = (taskId, title) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, title } : t)); };
             const updateTaskDetails = (taskId, details) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, details } : t)); };
+            const toggleTotallyDone = (taskId) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, isTotallyDone: !t.isTotallyDone } : t)); };
 
-            const toggleTotallyDone = (taskId) => {
-                setTasks(tasks.map(t => t.id === taskId ? { ...t, isTotallyDone: !t.isTotallyDone } : t));
-            };
-
-            const updateSubTaskTitle = (taskId, subTaskId, title) => {
-                setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, title } : sub) } : task));
-            };
-            const toggleSubTask = (taskId, subTaskId) => {
-                setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, isCompleted: !sub.isCompleted } : sub) } : task));
-            };
-            const addSubTask = (taskId, title) => {
-                if (!title.trim()) return;
-                setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: [...task.subTasks, { id: "sub_" + Date.now(), title, isCompleted: false }] } : task));
-            };
+            const updateSubTaskTitle = (taskId, subTaskId, title) => { setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, title } : sub) } : task)); };
+            const toggleSubTask = (taskId, subTaskId) => { setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, isCompleted: !sub.isCompleted } : sub) } : task)); };
+            const addSubTask = (taskId, title) => { if (!title.trim()) return; setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: [...task.subTasks, { id: "sub_" + Date.now(), title, isCompleted: false }] } : task)); };
             const deleteSubTask = (taskId, subTaskId) => {
                 setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.filter(sub => sub.id !== subTaskId) } : task));
                 const updatedPlan = { ...weeklyPlan };
@@ -193,15 +235,11 @@
                 setPlanningDay(null);
             };
 
-            const updateWeeklyItemStatus = (day, itemId, status) => {
-                setWeeklyPlan({ ...weeklyPlan, [day]: weeklyPlan[day].map(item => item.id === itemId ? { ...item, status } : item) });
-            };
-
-            const removeFromWeeklyPlan = (day, itemId) => {
-                setWeeklyPlan({ ...weeklyPlan, [day]: weeklyPlan[day].filter(item => item.id !== itemId) });
-            };
+            const updateWeeklyItemStatus = (day, itemId, status) => { setWeeklyPlan({ ...weeklyPlan, [day]: weeklyPlan[day].map(item => item.id === itemId ? { ...item, status } : item) }); };
+            const removeFromWeeklyPlan = (day, itemId) => { setWeeklyPlan({ ...weeklyPlan, [day]: weeklyPlan[day].filter(item => item.id !== itemId) }); };
 
             const currentSelectedTask = tasks.find(t => t.id === selectedTaskId);
+            const activeHabit = habits.find(h => h.id === selectedHabitId);
 
             return (
                 <div className="flex h-screen overflow-hidden select-none">
@@ -218,6 +256,10 @@
                                 </button>
                                 <button onClick={() => setActiveView("weekly")} className={`btn-press w-full flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-md transition-all ${activeView === 'weekly' ? 'bg-[#e8e8e7] text-[#37352f]' : 'text-[#64625d] hover:bg-[#e8e8e7]'}`}>
                                     <span>Haftalık Plan</span>
+                                </button>
+                                {/* YENİ: Alışkanlıklar Menüsü */}
+                                <button onClick={() => { setActiveView("habits"); if(!selectedHabitId && habits.length > 0) setSelectedHabitId(habits[0].id); }} className={`btn-press w-full flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-md transition-all ${activeView === 'habits' ? 'bg-[#e8e8e7] text-[#37352f]' : 'text-[#64625d] hover:bg-[#e8e8e7]'}`}>
+                                    <span>Alışkanlıklar</span>
                                 </button>
                             </nav>
                         </div>
@@ -426,8 +468,137 @@
                             </div>
                         )}
 
-                        {/* SIDE PEEK: SAĞDAN KAYAN GÖREV DETAY PANELİ */}
-                        <div className={`fixed top-0 right-0 h-full w-[400px] bg-white border-l border-[#e8e8e8] shadow-2xl transform transition-transform duration-300 z-50 flex flex-col ${currentSelectedTask ? 'translate-x-0' : 'translate-x-full'}`}>
+                        {/* YENİ VIEW 3: ALIŞKANLIKLAR (HABITS) TAKVİMİ */}
+                        {activeView === "habits" && (
+                            <div className="flex-1 flex overflow-hidden animate-modal">
+                                {/* Alışkanlıklar Sol Menüsü */}
+                                <div className="w-72 bg-white border-r border-neutral-200 p-6 overflow-y-auto">
+                                    <h2 className="text-lg font-bold text-[#37352f] mb-4">🌱 Alışkanlıklarım</h2>
+                                    
+                                    {showAddHabit ? (
+                                        <form onSubmit={handleAddHabit} className="mb-4 animate-modal">
+                                            <input 
+                                                type="text" 
+                                                autoFocus
+                                                value={newHabitTitle} 
+                                                onChange={e => setNewHabitTitle(e.target.value)} 
+                                                placeholder="Örn: 30 Dk Kitap Oku" 
+                                                className="w-full border border-neutral-300 rounded px-3 py-1.5 text-sm outline-none focus:border-blue-500 mb-2" 
+                                            />
+                                            <div className="flex space-x-2">
+                                                <button type="submit" className="flex-1 bg-neutral-800 text-white text-xs py-1.5 rounded hover:bg-neutral-700">Oluştur</button>
+                                                <button type="button" onClick={() => setShowAddHabit(false)} className="px-3 bg-neutral-100 text-neutral-600 text-xs rounded hover:bg-neutral-200">İptal</button>
+                                            </div>
+                                        </form>
+                                    ) : (
+                                        <button onClick={() => setShowAddHabit(true)} className="w-full border border-dashed border-neutral-300 text-neutral-500 text-sm font-medium py-2 rounded hover:bg-neutral-50 transition-colors mb-4">
+                                            + Yeni Ekle
+                                        </button>
+                                    )}
+
+                                    <div className="space-y-1">
+                                        {habits.length === 0 ? (
+                                            <p className="text-xs text-neutral-400 italic">Henüz bir alışkanlık oluşturmadın.</p>
+                                        ) : (
+                                            habits.map(habit => (
+                                                <div 
+                                                    key={habit.id} 
+                                                    onClick={() => setSelectedHabitId(habit.id)}
+                                                    className={`group flex items-center justify-between px-3 py-2 rounded-md cursor-pointer transition-colors ${selectedHabitId === habit.id ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-neutral-100 text-neutral-700'}`}
+                                                >
+                                                    <span className="text-sm truncate">{habit.title}</span>
+                                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteHabit(habit.id); }} className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 text-xs transition-opacity">✕</button>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Takvim Alanı (Sağ Taraf) */}
+                                <div className="flex-1 bg-[#fbfbfa] p-10 overflow-y-auto">
+                                    {!activeHabit ? (
+                                        <div className="h-full flex flex-col items-center justify-center text-neutral-400">
+                                            <div className="text-4xl mb-4">📅</div>
+                                            <p>Takvimini görmek için soldan bir alışkanlık seç veya yeni bir tane oluştur.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="max-w-4xl mx-auto">
+                                            <div className="flex justify-between items-center mb-8">
+                                                <div>
+                                                    <h1 className="text-3xl font-bold tracking-tight text-[#37352f]">{activeHabit.title}</h1>
+                                                    <p className="text-sm text-neutral-500 mt-1">İlgili günün üzerine tıklayarak durumunu belirtebilirsin.</p>
+                                                </div>
+                                                
+                                                {/* Ay Yönlendirme (Zaman Makinesi) */}
+                                                <div className="flex items-center space-x-4 bg-white border border-neutral-200 rounded-md p-1 shadow-sm">
+                                                    <button onClick={() => changeMonth(-1)} className="btn-press px-3 py-1 hover:bg-neutral-100 rounded text-neutral-600 font-bold">&lt;</button>
+                                                    <span className="text-sm font-semibold text-neutral-700 w-32 text-center">
+                                                        {MONTH_NAMES[month]} {year}
+                                                    </span>
+                                                    <button onClick={() => changeMonth(1)} className="btn-press px-3 py-1 hover:bg-neutral-100 rounded text-neutral-600 font-bold">&gt;</button>
+                                                </div>
+                                            </div>
+
+                                            {/* Dinamik Takvim Grid'i */}
+                                            <div className="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden">
+                                                {/* Gün Başlıkları */}
+                                                <div className="grid grid-cols-7 bg-neutral-50 border-b border-neutral-200">
+                                                    {DAYS_OF_WEEK.map(day => (
+                                                        <div key={day} className="py-3 text-center text-xs font-bold text-neutral-500 uppercase tracking-wider">{day}</div>
+                                                    ))}
+                                                </div>
+                                                
+                                                {/* Takvim Kutucukları */}
+                                                <div className="grid grid-cols-7 gap-px bg-neutral-200">
+                                                    {/* Ay başındaki boşluklar */}
+                                                    {blankDays.map((_, i) => (
+                                                        <div key={`blank-${i}`} className="bg-white min-h-[100px]"></div>
+                                                    ))}
+                                                    
+                                                    {/* Ayın Günleri */}
+                                                    {monthDays.map(d => {
+                                                        // Format: YYYY-MM-DD (Zaman dilimi kaymasını önlemek için manuel formatlıyoruz)
+                                                        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                                                        const status = habitLogs[activeHabit.id]?.[dateStr];
+                                                        
+                                                        // Dinamik CSS Sınıfları
+                                                        let boxStyle = "bg-white hover:bg-neutral-50 text-neutral-700";
+                                                        let icon = "";
+                                                        
+                                                        if (status === "done") {
+                                                            boxStyle = "bg-green-500 hover:bg-green-600 text-white font-bold";
+                                                            icon = "✅";
+                                                        } else if (status === "failed") {
+                                                            boxStyle = "bg-red-500 hover:bg-red-600 text-white font-bold";
+                                                            icon = "❌";
+                                                        }
+
+                                                        // Bugünün tarihini vurgulama
+                                                        const isToday = new Date().toDateString() === new Date(year, month, d).toDateString();
+
+                                                        return (
+                                                            <div 
+                                                                key={d} 
+                                                                onClick={() => toggleHabitStatus(activeHabit.id, dateStr)}
+                                                                className={`task-card-anim min-h-[100px] p-2 flex flex-col items-center justify-center cursor-pointer transition-colors relative ${boxStyle}`}
+                                                            >
+                                                                <span className={`text-lg ${isToday && !status ? 'bg-neutral-800 text-white rounded-full w-8 h-8 flex items-center justify-center' : ''}`}>
+                                                                    {d}
+                                                                </span>
+                                                                {icon && <span className="mt-2 text-xl animate-modal">{icon}</span>}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* SIDE PEEK PANELİ (Tasks İçin) */}
+                        <div className={`fixed top-0 right-0 h-full w-[400px] bg-white border-l border-[#e8e8e8] shadow-2xl transform transition-transform duration-300 z-50 flex flex-col ${currentSelectedTask && activeView !== "habits" ? 'translate-x-0' : 'translate-x-full'}`}>
                             {currentSelectedTask && (
                                 <div className="flex-1 flex flex-col overflow-hidden p-6">
                                     <div className="flex justify-between items-center mb-4">
@@ -499,7 +670,7 @@
                             )}
                         </div>
 
-                        {/* PLANLAMA MODALİ */}
+                        {/* PLANLAMA MODALİ (Tasks İçin) */}
                         {planningDay && (
                             <div className="animate-overlay fixed inset-0 bg-black/30 flex items-center justify-center z-50">
                                 <div className="animate-modal bg-white rounded-lg p-5 w-[400px] max-h-[80vh] flex flex-col shadow-2xl">
