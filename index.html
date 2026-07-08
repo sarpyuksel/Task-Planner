@@ -4,46 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notion Style Task & Weekly Manager</title>
+    
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏆</text></svg>">
+    
+    <link rel="stylesheet" href="style.css">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #fbfbfa; color: #37352f; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(55, 53, 47, 0.1); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(55, 53, 47, 0.2); }
-        
-        select.status-select {
-            -webkit-appearance: none; -moz-appearance: none; appearance: none;
-            background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
-            background-repeat: no-repeat; background-position-x: 100%; background-position-y: 50%; padding-right: 20px;
-        }
-
-        .draggable-card { cursor: grab; }
-        .draggable-card:active { cursor: grabbing; }
-        .inline-textarea { resize: none; overflow: hidden; }
-
-        /* Master Checkbox Stili */
-        .master-checkbox {
-            appearance: none;
-            width: 1.25rem; height: 1.25rem;
-            border: 2px solid #d1d5db; border-radius: 50%; /* Yuvarlak hatlı */
-            display: grid; place-content: center; cursor: pointer; transition: all 0.2s ease-in-out;
-        }
-        .master-checkbox::before {
-            content: ""; width: 0.65em; height: 0.65em; transform: scale(0); transition: 120ms transform ease-in-out;
-            box-shadow: inset 1em 1em white;
-            transform-origin: center;
-            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-        }
-        .master-checkbox:checked { background-color: #16a34a; border-color: #16a34a; }
-        .master-checkbox:checked::before { transform: scale(1); }
-    </style>
 </head>
 <body>
 
@@ -156,7 +126,6 @@
                 setWeeklyPlan(newPlan);
             };
 
-            // --- TASK & CATEGORY LOGIC ---
             const handleAddCategory = (e) => {
                 e.preventDefault();
                 const trimmedName = newCategoryName.trim();
@@ -192,18 +161,15 @@
                 }
             };
 
-            // Global (Genel) Durum Güncellemeleri
             const updateTaskStatus = (taskId, status) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, status } : t)); };
             const updateTaskPriority = (taskId, priority) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, priority } : t)); };
             const updateTaskTitle = (taskId, title) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, title } : t)); };
             const updateTaskDetails = (taskId, details) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, details } : t)); };
 
-            // YENİ: Totally Done (Master Checkbox) Fonksiyonu
             const toggleTotallyDone = (taskId) => {
                 setTasks(tasks.map(t => t.id === taskId ? { ...t, isTotallyDone: !t.isTotallyDone } : t));
             };
 
-            // Alt Görev Fonksiyonları
             const updateSubTaskTitle = (taskId, subTaskId, title) => {
                 setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, title } : sub) } : task));
             };
@@ -221,20 +187,14 @@
                 setWeeklyPlan(updatedPlan);
             };
 
-            // YENİ: Haftalık Plan Fonksiyonları
             const addToWeeklyPlan = (day, taskId, subTaskId = null) => {
-                // Artık haftalık planın içine kendi "bağımsız durumunu (status)" da koyuyoruz.
                 const newItem = { id: "wp_" + Date.now(), taskId, subTaskId, status: "Not Started" };
                 setWeeklyPlan({ ...weeklyPlan, [day]: [...weeklyPlan[day], newItem] });
                 setPlanningDay(null);
             };
 
             const updateWeeklyItemStatus = (day, itemId, status) => {
-                // Sadece o günkü o spesifik kutucuğun statüsünü değiştirir.
-                setWeeklyPlan({
-                    ...weeklyPlan,
-                    [day]: weeklyPlan[day].map(item => item.id === itemId ? { ...item, status } : item)
-                });
+                setWeeklyPlan({ ...weeklyPlan, [day]: weeklyPlan[day].map(item => item.id === itemId ? { ...item, status } : item) });
             };
 
             const removeFromWeeklyPlan = (day, itemId) => {
@@ -248,15 +208,15 @@
                     {/* SIDEBAR */}
                     <div className="w-64 bg-[#f3f3f2] border-r border-[#e8e8e8] flex flex-col justify-between p-3 shrink-0">
                         <div>
-                            <div className="flex items-center space-x-2 px-2 py-3 mb-4 rounded-md hover:bg-[#e8e8e7] cursor-pointer transition">
+                            <div className="flex items-center space-x-2 px-2 py-3 mb-4 rounded-md hover:bg-[#e8e8e7] cursor-pointer transition-colors">
                                 <div className="w-6 h-6 rounded-full bg-neutral-700 text-white flex items-center justify-center text-xs font-bold">🎯</div>
                                 <span className="font-semibold text-sm text-[#37352f]">Çalışma Alanım</span>
                             </div>
                             <nav className="space-y-1">
-                                <button onClick={() => setActiveView("tasks")} className={`w-full flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-md transition ${activeView === 'tasks' ? 'bg-[#e8e8e7] text-[#37352f]' : 'text-[#64625d] hover:bg-[#e8e8e7]'}`}>
+                                <button onClick={() => setActiveView("tasks")} className={`btn-press w-full flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-md transition-all ${activeView === 'tasks' ? 'bg-[#e8e8e7] text-[#37352f]' : 'text-[#64625d] hover:bg-[#e8e8e7]'}`}>
                                     <span>Tüm Görevler</span>
                                 </button>
-                                <button onClick={() => setActiveView("weekly")} className={`w-full flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-md transition ${activeView === 'weekly' ? 'bg-[#e8e8e7] text-[#37352f]' : 'text-[#64625d] hover:bg-[#e8e8e7]'}`}>
+                                <button onClick={() => setActiveView("weekly")} className={`btn-press w-full flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-md transition-all ${activeView === 'weekly' ? 'bg-[#e8e8e7] text-[#37352f]' : 'text-[#64625d] hover:bg-[#e8e8e7]'}`}>
                                     <span>Haftalık Plan</span>
                                 </button>
                             </nav>
@@ -268,63 +228,63 @@
                         
                         {/* VIEW 1: TÜM GÖREVLER */}
                         {activeView === "tasks" && (
-                            <div className="flex-1 overflow-y-auto p-10 max-w-5xl w-full mx-auto">
+                            <div className="flex-1 overflow-y-auto p-10 max-w-5xl w-full mx-auto animate-modal">
                                 <div className="flex justify-between items-center mb-6">
                                     <h1 className="text-3xl font-bold tracking-tight text-[#37352f]">🎯 Tüm Görev Havuzu</h1>
-                                    <button onClick={() => setShowAddForm(!showAddForm)} className="bg-[#2eaadc] hover:bg-[#1c92c1] text-white text-sm font-medium px-3 py-1.5 rounded shadow-sm transition">
+                                    <button onClick={() => setShowAddForm(!showAddForm)} className="btn-press bg-[#2eaadc] hover:bg-[#1c92c1] text-white text-sm font-medium px-3 py-1.5 rounded shadow-sm transition-all">
                                         + Yeni Görev
                                     </button>
                                 </div>
 
                                 <div className="flex flex-wrap items-center gap-2 mb-8 border-b border-[#e8e8e8] pb-3">
-                                    <button onClick={() => setFilterCategory("Hepsi")} className={`px-3 py-1 rounded text-xs font-medium transition ${filterCategory === "Hepsi" ? "bg-neutral-800 text-white" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"}`}>Hepsi</button>
+                                    <button onClick={() => setFilterCategory("Hepsi")} className={`btn-press px-3 py-1 rounded text-xs font-medium transition-all ${filterCategory === "Hepsi" ? "bg-neutral-800 text-white" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"}`}>Hepsi</button>
                                     
                                     {categories.map(cat => (
-                                        <button key={cat.name} onClick={() => setFilterCategory(cat.name)} style={{ backgroundColor: filterCategory === cat.name ? cat.text : cat.color, color: filterCategory === cat.name ? '#ffffff' : cat.text }} className="px-3 py-1 rounded text-xs font-medium transition opacity-90 hover:opacity-100">
+                                        <button key={cat.name} onClick={() => setFilterCategory(cat.name)} style={{ backgroundColor: filterCategory === cat.name ? cat.text : cat.color, color: filterCategory === cat.name ? '#ffffff' : cat.text }} className="btn-press px-3 py-1 rounded text-xs font-medium transition-all opacity-90 hover:opacity-100">
                                             {cat.name}
                                         </button>
                                     ))}
 
                                     {showAddCategory ? (
-                                        <form onSubmit={handleAddCategory} className="flex items-center space-x-1 ml-2">
+                                        <form onSubmit={handleAddCategory} className="flex items-center space-x-1 ml-2 animate-modal">
                                             <input type="text" autoFocus value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="Kategori Adı..." className="border border-neutral-300 rounded px-2 py-0.5 text-xs outline-none focus:border-neutral-500 w-32" />
-                                            <button type="submit" className="text-xs bg-neutral-200 hover:bg-neutral-300 px-2 py-1 rounded font-medium transition">Ekle</button>
-                                            <button type="button" onClick={() => setShowAddCategory(false)} className="text-xs text-neutral-500 hover:text-neutral-800 px-1">✕</button>
+                                            <button type="submit" className="btn-press text-xs bg-neutral-200 hover:bg-neutral-300 px-2 py-1 rounded font-medium transition-all">Ekle</button>
+                                            <button type="button" onClick={() => setShowAddCategory(false)} className="btn-press text-xs text-neutral-500 hover:text-neutral-800 px-1">✕</button>
                                         </form>
                                     ) : (
-                                        <button onClick={() => setShowAddCategory(true)} className="px-3 py-1 ml-2 border border-dashed border-neutral-300 text-neutral-500 rounded text-xs font-medium hover:bg-neutral-50 transition">
+                                        <button onClick={() => setShowAddCategory(true)} className="btn-press px-3 py-1 ml-2 border border-dashed border-neutral-300 text-neutral-500 rounded text-xs font-medium hover:bg-neutral-50 transition-all">
                                             + Kategori Ekle
                                         </button>
                                     )}
                                 </div>
 
                                 {showAddForm && (
-                                    <form onSubmit={handleAddTask} className="bg-white border border-[#e8e8e8] rounded-lg p-5 mb-6 shadow-sm space-y-4">
+                                    <form onSubmit={handleAddTask} className="bg-white border border-[#e8e8e8] rounded-lg p-5 mb-6 shadow-sm space-y-4 animate-modal">
                                         <div className="grid grid-cols-4 gap-4">
                                             <div className="col-span-2">
                                                 <label className="block text-xs font-medium text-neutral-500 mb-1">Görev Adı</label>
-                                                <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} className="w-full border border-neutral-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500" required />
+                                                <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} className="w-full border border-neutral-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 transition-colors" required />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-medium text-neutral-500 mb-1">Kategori</label>
-                                                <select value={newCategory} onChange={e => setNewCategory(e.target.value)} className="w-full border border-neutral-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+                                                <select value={newCategory} onChange={e => setNewCategory(e.target.value)} className="w-full border border-neutral-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 transition-colors">
                                                     {categories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
                                                 </select>
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-medium text-neutral-500 mb-1">Öncelik</label>
-                                                <select value={newPriority} onChange={e => setNewPriority(e.target.value)} className="w-full border border-neutral-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+                                                <select value={newPriority} onChange={e => setNewPriority(e.target.value)} className="w-full border border-neutral-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 transition-colors">
                                                     {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
                                                 </select>
                                             </div>
                                         </div>
                                         <div>
                                             <label className="block text-xs font-medium text-neutral-500 mb-1">Detaylar / Notlar</label>
-                                            <textarea value={newDetails} onChange={e => setNewDetails(e.target.value)} rows="2" className="w-full border border-neutral-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 resize-none"></textarea>
+                                            <textarea value={newDetails} onChange={e => setNewDetails(e.target.value)} rows="2" className="w-full border border-neutral-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 resize-none transition-colors"></textarea>
                                         </div>
                                         <div className="flex justify-end space-x-2">
-                                            <button type="button" onClick={() => setShowAddForm(false)} className="px-3 py-1.5 border border-neutral-200 text-neutral-600 text-sm rounded hover:bg-neutral-50">Vazgeç</button>
-                                            <button type="submit" className="px-4 py-1.5 bg-[#2eaadc] text-white text-sm rounded hover:bg-[#1c92c1]">Havuzuna Ekle</button>
+                                            <button type="button" onClick={() => setShowAddForm(false)} className="btn-press px-3 py-1.5 border border-neutral-200 text-neutral-600 text-sm rounded hover:bg-neutral-50 transition-colors">Vazgeç</button>
+                                            <button type="submit" className="btn-press px-4 py-1.5 bg-[#2eaadc] text-white text-sm rounded hover:bg-[#1c92c1] transition-colors">Havuzuna Ekle</button>
                                         </div>
                                     </form>
                                 )}
@@ -335,18 +295,15 @@
                                         const taskStatus = task.status || "Not Started";
                                         const taskPriority = task.priority || "Orta";
                                         const priorityColor = priorityStyles[taskPriority].text;
-                                        
-                                        // Totally Done ise görev yeşilimsi ve üstü çizili olacak
                                         const isDone = task.isTotallyDone || false;
 
                                         return (
                                             <div 
                                                 key={task.id} 
                                                 onClick={() => setSelectedTaskId(task.id)} 
-                                                className={`group flex items-center justify-between p-3 bg-white border ${isDone ? 'border-green-300 bg-green-50/40 opacity-80' : 'border-[#e8e8e8] hover:border-neutral-400'} rounded-md shadow-sm cursor-pointer transition-all`}
+                                                className={`task-card-anim group flex items-center justify-between p-3 bg-white border ${isDone ? 'border-green-300 bg-green-50/40 opacity-80' : 'border-[#e8e8e8]'} rounded-md shadow-sm cursor-pointer`}
                                             >
                                                 <div className="flex items-center space-x-4 truncate flex-1">
-                                                    {/* YENİ: Totally Done Master Checkbox */}
                                                     <input 
                                                         type="checkbox"
                                                         checked={isDone}
@@ -356,7 +313,7 @@
                                                         title="Görevi Tamamen Bitir"
                                                     />
                                                     
-                                                    <span style={{ backgroundColor: catConfig.color, color: catConfig.text }} className={`px-2 py-0.5 rounded text-xs font-semibold shrink-0 ${isDone ? 'opacity-60' : ''}`}>{task.category}</span>
+                                                    <span style={{ backgroundColor: catConfig.color, color: catConfig.text }} className={`px-2 py-0.5 rounded text-xs font-semibold shrink-0 transition-opacity ${isDone ? 'opacity-60' : ''}`}>{task.category}</span>
                                                     <span className={`font-medium text-sm truncate transition-all ${isDone ? 'line-through text-neutral-400' : 'text-[#37352f] group-hover:text-blue-600'}`}>{task.title}</span>
                                                 </div>
                                                 
@@ -367,7 +324,7 @@
                                                                 value={taskStatus}
                                                                 onClick={(e) => e.stopPropagation()} 
                                                                 onChange={(e) => { e.stopPropagation(); updateTaskStatus(task.id, e.target.value); }}
-                                                                className={`status-select text-[11px] font-semibold border rounded-full px-2.5 py-0.5 outline-none cursor-pointer transition ${statusStyles[taskStatus]}`}
+                                                                className={`btn-press status-select text-[11px] font-semibold border rounded-full px-2.5 py-0.5 outline-none cursor-pointer transition-colors ${statusStyles[taskStatus]}`}
                                                             >
                                                                 {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                                                             </select>
@@ -376,9 +333,9 @@
                                                         </>
                                                     )}
                                                     
-                                                    {isDone && <span className="text-xs font-bold text-green-600 px-2">TAMAMLANDI 🎉</span>}
+                                                    {isDone && <span className="text-xs font-bold text-green-600 px-2 animate-modal">TAMAMLANDI 🎉</span>}
                                                     
-                                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }} className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs font-semibold ml-2">Sil</button>
+                                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }} className="btn-press opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs font-semibold ml-2 transition-all">Sil</button>
                                                 </div>
                                             </div>
                                         );
@@ -389,7 +346,7 @@
 
                         {/* VIEW 2: HAFTALIK PLAN */}
                         {activeView === "weekly" && (
-                            <div className="flex-1 overflow-x-auto p-10">
+                            <div className="flex-1 overflow-x-auto p-10 animate-modal">
                                 <h1 className="text-3xl font-bold tracking-tight text-[#37352f] mb-6 max-w-7xl mx-auto">📅 Haftalık Çizelge</h1>
                                 <div className="grid grid-cols-7 gap-3 max-w-7xl mx-auto min-w-[1000px]">
                                     {DAYS_OF_WEEK.map(day => (
@@ -397,11 +354,11 @@
                                             key={day} 
                                             onDragOver={(e) => e.preventDefault()}
                                             onDrop={(e) => handleDrop(e, day)}
-                                            className="bg-[#f7f7f5] rounded-xl p-3 border border-[#e8e8e8] flex flex-col h-[calc(100vh-180px)] transition-colors"
+                                            className="bg-[#f7f7f5] rounded-xl p-3 border border-[#e8e8e8] flex flex-col h-[calc(100vh-180px)] transition-colors hover:border-neutral-300"
                                         >
                                             <div className="flex justify-between items-center mb-3 pb-1 border-b border-neutral-200">
                                                 <span className="font-semibold text-sm text-neutral-700">{day}</span>
-                                                <button onClick={() => setPlanningDay(day)} className="w-5 h-5 rounded hover:bg-neutral-200 flex items-center justify-center text-neutral-500 text-sm">+</button>
+                                                <button onClick={() => setPlanningDay(day)} className="btn-press w-5 h-5 rounded hover:bg-neutral-200 flex items-center justify-center text-neutral-500 text-sm transition-colors">+</button>
                                             </div>
                                             
                                             <div className="space-y-2 flex-1 overflow-y-auto pr-1 pb-10">
@@ -410,10 +367,7 @@
                                                     if (!parentTask) return null;
                                                     
                                                     const subTask = item.subTaskId ? parentTask.subTasks.find(s => s.id === item.subTaskId) : null;
-                                                    
-                                                    // YENİ: Artık kart kendi bağımsız statusünü okuyor (Eski kartlar için fallback: Not Started)
                                                     const itemStatus = item.status || "Not Started";
-                                                    
                                                     const taskPriority = parentTask.priority || "Orta";
                                                     const pStyle = priorityStyles[taskPriority];
                                                     const isTotallyDone = parentTask.isTotallyDone;
@@ -428,22 +382,22 @@
                                                             onDragEnd={handleDragEnd}
                                                             onDragOver={(e) => e.preventDefault()}
                                                             style={{ backgroundColor: pStyle.bg, borderColor: pStyle.border }}
-                                                            className={`draggable-card border rounded p-2.5 shadow-sm group hover:brightness-95 relative transition flex flex-col ${isTotallyDone ? 'opacity-50 grayscale' : ''}`}
+                                                            className={`task-card-anim draggable-card border rounded p-2.5 shadow-sm group relative flex flex-col ${isTotallyDone ? 'opacity-50 grayscale' : ''}`}
                                                         >
                                                             <button 
                                                                 onClick={(e) => { e.stopPropagation(); removeFromWeeklyPlan(day, item.id); }} 
-                                                                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-red-500 text-xs bg-white rounded-full w-4 h-4 flex items-center justify-center shadow"
+                                                                className="btn-press absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-red-500 text-xs bg-white rounded-full w-4 h-4 flex items-center justify-center shadow transition-all"
                                                             >✕</button>
                                                             
                                                             {subTask ? (
                                                                 <div className="pr-4 break-words mb-2 pointer-events-none">
                                                                     <div className={`text-[10px] opacity-60 line-through mb-0.5`}>{parentTask.title}</div>
-                                                                    <div className={`text-xs font-semibold text-[#37352f] leading-snug ${isTotallyDone ? 'line-through' : ''}`}>
+                                                                    <div className={`text-xs font-semibold text-[#37352f] leading-snug transition-all ${isTotallyDone ? 'line-through' : ''}`}>
                                                                         🔹 {subTask.title}
                                                                     </div>
                                                                 </div>
                                                             ) : (
-                                                                <div className={`text-xs font-semibold text-[#37352f] leading-snug pr-4 break-words mb-2 pointer-events-none ${isTotallyDone ? 'line-through' : ''}`}>
+                                                                <div className={`text-xs font-semibold text-[#37352f] leading-snug pr-4 break-words mb-2 pointer-events-none transition-all ${isTotallyDone ? 'line-through' : ''}`}>
                                                                     📌 {parentTask.title}
                                                                 </div>
                                                             )}
@@ -455,11 +409,8 @@
                                                                     <select 
                                                                         value={itemStatus}
                                                                         onClick={(e) => e.stopPropagation()}
-                                                                        
-                                                                        // YENİ: Artık ana taskı değil, o günkü spesifik itemı güncelliyor
                                                                         onChange={(e) => { e.stopPropagation(); updateWeeklyItemStatus(day, item.id, e.target.value); }}
-                                                                        
-                                                                        className={`status-select text-[9px] font-bold border rounded-full px-1.5 py-0.5 outline-none cursor-pointer ${statusStyles[itemStatus]}`}
+                                                                        className={`status-select text-[9px] font-bold border rounded-full px-1.5 py-0.5 outline-none cursor-pointer transition-colors ${statusStyles[itemStatus]}`}
                                                                     >
                                                                         {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                                                                     </select>
@@ -485,7 +436,7 @@
                                                 value={currentSelectedTask.status || "Not Started"}
                                                 onChange={(e) => updateTaskStatus(currentSelectedTask.id, e.target.value)}
                                                 disabled={currentSelectedTask.isTotallyDone}
-                                                className={`status-select text-xs font-semibold border rounded-md px-2 py-1 outline-none cursor-pointer ${statusStyles[currentSelectedTask.status || "Not Started"]} ${currentSelectedTask.isTotallyDone ? 'opacity-50' : ''}`}
+                                                className={`btn-press status-select text-xs font-semibold border rounded-md px-2 py-1 outline-none cursor-pointer transition-colors ${statusStyles[currentSelectedTask.status || "Not Started"]} ${currentSelectedTask.isTotallyDone ? 'opacity-50' : ''}`}
                                             >
                                                 {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                                             </select>
@@ -493,16 +444,15 @@
                                             <select 
                                                 value={currentSelectedTask.priority || "Orta"}
                                                 onChange={(e) => updateTaskPriority(currentSelectedTask.id, e.target.value)}
-                                                className="text-xs font-semibold border border-neutral-200 rounded-md px-2 py-1 outline-none cursor-pointer bg-neutral-50"
+                                                className="btn-press text-xs font-semibold border border-neutral-200 rounded-md px-2 py-1 outline-none cursor-pointer bg-neutral-50 transition-colors"
                                             >
                                                 {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
                                             </select>
                                         </div>
-                                        <button onClick={() => setSelectedTaskId(null)} className="text-neutral-400 hover:text-neutral-600 text-xl">✕</button>
+                                        <button onClick={() => setSelectedTaskId(null)} className="btn-press text-neutral-400 hover:text-neutral-600 text-xl transition-colors">✕</button>
                                     </div>
 
-                                    {/* YENİ: Side Peek Totally Done Uyarısı/Butonu */}
-                                    <div className="flex items-center space-x-3 mb-4 bg-green-50 p-3 rounded-md border border-green-200">
+                                    <div className="flex items-center space-x-3 mb-4 bg-green-50 p-3 rounded-md border border-green-200 transition-all">
                                         <input 
                                             type="checkbox"
                                             checked={currentSelectedTask.isTotallyDone || false}
@@ -527,7 +477,7 @@
                                     />
                                     
                                     <h3 className="text-xs font-bold uppercase text-neutral-400 mb-2">📋 Alt Adımlar</h3>
-                                    <input type="text" placeholder="+ Alt adım ekle (Enter)" onKeyDown={(e) => { if (e.key === 'Enter') { addSubTask(currentSelectedTask.id, e.target.value); e.target.value = ""; } }} className="w-full bg-neutral-50 border border-neutral-200 rounded px-3 py-1.5 text-xs mb-3 focus:outline-none focus:border-blue-400" />
+                                    <input type="text" placeholder="+ Alt adım ekle (Enter)" onKeyDown={(e) => { if (e.key === 'Enter') { addSubTask(currentSelectedTask.id, e.target.value); e.target.value = ""; } }} className="w-full bg-neutral-50 border border-neutral-200 rounded px-3 py-1.5 text-xs mb-3 focus:outline-none focus:border-blue-400 transition-colors" />
                                     
                                     <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
                                         {currentSelectedTask.subTasks.map(sub => (
@@ -538,10 +488,10 @@
                                                         type="text" 
                                                         value={sub.title}
                                                         onChange={(e) => updateSubTaskTitle(currentSelectedTask.id, sub.id, e.target.value)}
-                                                        className={`text-xs bg-transparent border-none focus:outline-none w-full ${sub.isCompleted ? 'line-through text-neutral-400' : 'text-neutral-700'}`}
+                                                        className={`text-xs bg-transparent border-none focus:outline-none w-full transition-all ${sub.isCompleted ? 'line-through text-neutral-400' : 'text-neutral-700'}`}
                                                     />
                                                 </div>
-                                                <button onClick={() => deleteSubTask(currentSelectedTask.id, sub.id)} className="text-red-500 text-xs opacity-0 group-hover:opacity-100 font-bold ml-2">✕</button>
+                                                <button onClick={() => deleteSubTask(currentSelectedTask.id, sub.id)} className="btn-press text-red-500 text-xs opacity-0 group-hover:opacity-100 font-bold ml-2 transition-all">✕</button>
                                             </div>
                                         ))}
                                     </div>
@@ -551,27 +501,27 @@
 
                         {/* PLANLAMA MODALİ */}
                         {planningDay && (
-                            <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-                                <div className="bg-white rounded-lg p-5 w-[400px] max-h-[80vh] flex flex-col">
+                            <div className="animate-overlay fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+                                <div className="animate-modal bg-white rounded-lg p-5 w-[400px] max-h-[80vh] flex flex-col shadow-2xl">
                                     <div className="flex justify-between mb-4 border-b pb-2">
                                         <h3 className="font-bold text-sm">{planningDay} Gününe Görev Ata</h3>
-                                        <button onClick={() => setPlanningDay(null)}>✕</button>
+                                        <button onClick={() => setPlanningDay(null)} className="btn-press text-neutral-400 hover:text-neutral-800 transition-colors">✕</button>
                                     </div>
                                     <div className="flex-1 overflow-y-auto space-y-4">
                                         {tasks.filter(t => !t.isTotallyDone).length === 0 ? (
                                             <p className="text-xs text-center py-4 text-neutral-400">Atanacak aktif görev yok.</p>
                                         ) : (
                                             tasks.filter(t => !t.isTotallyDone).map(task => (
-                                                <div key={task.id} className="border p-2 bg-neutral-50 rounded">
+                                                <div key={task.id} className="border border-neutral-200 p-2 bg-neutral-50 rounded hover:border-neutral-300 transition-colors">
                                                     <div className="flex justify-between items-center mb-2">
                                                         <span className="text-xs font-bold truncate max-w-[200px]">{task.title}</span>
-                                                        <button onClick={() => addToWeeklyPlan(planningDay, task.id)} className="bg-neutral-800 text-white text-[10px] px-2 py-0.5 rounded hover:bg-neutral-700">Ekle</button>
+                                                        <button onClick={() => addToWeeklyPlan(planningDay, task.id)} className="btn-press bg-neutral-800 text-white text-[10px] px-2 py-0.5 rounded hover:bg-neutral-700 transition-colors">Ekle</button>
                                                     </div>
-                                                    <div className="pl-2 border-l border-neutral-200 space-y-1">
+                                                    <div className="pl-2 border-l border-neutral-300 space-y-1">
                                                         {task.subTasks.map(sub => (
                                                             <div key={sub.id} className="flex justify-between text-[11px] items-center">
                                                                 <span className="truncate">{sub.title}</span>
-                                                                <button onClick={() => addToWeeklyPlan(planningDay, task.id, sub.id)} className="text-blue-600 font-semibold hover:underline">Adımı Ekle</button>
+                                                                <button onClick={() => addToWeeklyPlan(planningDay, task.id, sub.id)} className="text-blue-600 font-semibold hover:underline transition-all">Adımı Ekle</button>
                                                             </div>
                                                         ))}
                                                     </div>
