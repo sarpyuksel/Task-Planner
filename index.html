@@ -54,7 +54,6 @@
         const MONTH_NAMES = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 
         function App() {
-            // --- STATE TANIMLAMALARI VE LOCALSTORAGE ENTEGRASYONU ---
             const [categories, setCategories] = useState(() => {
                 const saved = localStorage.getItem("notion_categories");
                 return saved ? JSON.parse(saved) : defaultCategories;
@@ -89,6 +88,9 @@
             const [startTime, setStartTime] = useState("");
             const [endTime, setEndTime] = useState("");
 
+            // YENİ: Arama Çubuğu State'i (Modal İçin)
+            const [planningSearchQuery, setPlanningSearchQuery] = useState("");
+
             const [showAddForm, setShowAddForm] = useState(false);
             const [newTitle, setNewTitle] = useState("");
             const [newCategory, setNewCategory] = useState(categories[0]?.name || "");
@@ -114,7 +116,6 @@
             useEffect(() => { localStorage.setItem("notion_habits", JSON.stringify(habits)); }, [habits]);
             useEffect(() => { localStorage.setItem("notion_habit_logs", JSON.stringify(habitLogs)); }, [habitLogs]);
 
-            // --- YEDEKLEME FONKSİYONLARI ---
             const exportData = () => {
                 const backupData = { categories, tasks, weeklyPlan, habits, habitLogs };
                 const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json;charset=utf-8" });
@@ -151,35 +152,21 @@
                         }
                         alert("Veriler başarıyla yüklendi! 🚀");
                         event.target.value = ""; 
-                    } catch (error) { 
-                        alert("Hata: Yüklediğiniz dosya geçerli değil."); 
-                    }
+                    } catch (error) { alert("Hata: Yüklediğiniz dosya geçerli değil."); }
                 };
                 reader.readAsText(file);
             };
 
-            // --- DRAG & DROP FONKSİYONLARI ---
-            const handleDragStart = (e, day, index) => { 
-                dragItem.current = { day, index }; 
-                setTimeout(() => { e.target.style.opacity = '0.5'; }, 0); 
-            };
-            const handleDragEnter = (e, day, index) => { 
-                dragOverItem.current = { day, index }; 
-            };
-            const handleDragEnd = (e) => { 
-                e.target.style.opacity = '1'; 
-                dragItem.current = null; 
-                dragOverItem.current = null; 
-            };
+            const handleDragStart = (e, day, index) => { dragItem.current = { day, index }; setTimeout(() => { e.target.style.opacity = '0.5'; }, 0); };
+            const handleDragEnter = (e, day, index) => { dragOverItem.current = { day, index }; };
+            const handleDragEnd = (e) => { e.target.style.opacity = '1'; dragItem.current = null; dragOverItem.current = null; };
             const handleDrop = (e, targetDay) => {
                 e.preventDefault();
                 if (!dragItem.current) return;
                 const sourceDay = dragItem.current.day;
                 const sourceIndex = dragItem.current.index;
                 let destIndex = weeklyPlan[targetDay].length;
-                if (dragOverItem.current && dragOverItem.current.day === targetDay) { 
-                    destIndex = dragOverItem.current.index; 
-                }
+                if (dragOverItem.current && dragOverItem.current.day === targetDay) { destIndex = dragOverItem.current.index; }
                 if (sourceDay === targetDay && sourceIndex === destIndex) return;
                 const newPlan = { ...weeklyPlan };
                 const itemToMove = newPlan[sourceDay][sourceIndex];
@@ -188,40 +175,19 @@
                 setWeeklyPlan(newPlan);
             };
 
-            // --- KATEGORİ & GÖREV CRUD İŞLEMLERİ ---
             const handleAddCategory = (e) => {
-                e.preventDefault(); 
-                const trimmedName = newCategoryName.trim(); 
-                if (!trimmedName) return;
-                if (categories.find(c => c.name.toLowerCase() === trimmedName.toLowerCase())) { 
-                    alert("Bu kategori mevcut!"); 
-                    return; 
-                }
+                e.preventDefault(); const trimmedName = newCategoryName.trim(); if (!trimmedName) return;
+                if (categories.find(c => c.name.toLowerCase() === trimmedName.toLowerCase())) { alert("Bu kategori mevcut!"); return; }
                 const randomColor = pastelColors[Math.floor(Math.random() * pastelColors.length)];
                 setCategories([...categories, { name: trimmedName, color: randomColor.color, text: randomColor.text }]);
-                setNewCategoryName(""); 
-                setShowAddCategory(false);
+                setNewCategoryName(""); setShowAddCategory(false);
             };
 
             const handleAddTask = (e) => {
-                e.preventDefault(); 
-                if (!newTitle.trim()) return;
-                const newTask = { 
-                    id: "task_" + Date.now(), 
-                    title: newTitle, 
-                    category: newCategory || categories[0].name, 
-                    details: newDetails, 
-                    priority: newPriority, 
-                    status: newStatus, 
-                    isTotallyDone: false, 
-                    subTasks: [] 
-                };
+                e.preventDefault(); if (!newTitle.trim()) return;
+                const newTask = { id: "task_" + Date.now(), title: newTitle, category: newCategory || categories[0].name, details: newDetails, priority: newPriority, status: newStatus, isTotallyDone: false, subTasks: [] };
                 setTasks([newTask, ...tasks]);
-                setNewTitle(""); 
-                setNewDetails(""); 
-                setNewPriority("Orta"); 
-                setNewStatus("Not Started"); 
-                setShowAddForm(false);
+                setNewTitle(""); setNewDetails(""); setNewPriority("Orta"); setNewStatus("Not Started"); setShowAddForm(false);
             };
 
             const handleDeleteTask = (taskId) => {
@@ -229,58 +195,33 @@
                     setTasks(tasks.filter(t => t.id !== taskId));
                     if (selectedTaskId === taskId) setSelectedTaskId(null);
                     const updatedPlan = { ...weeklyPlan };
-                    Object.keys(updatedPlan).forEach(day => { 
-                        updatedPlan[day] = updatedPlan[day].filter(item => item.taskId !== taskId); 
-                    });
+                    Object.keys(updatedPlan).forEach(day => { updatedPlan[day] = updatedPlan[day].filter(item => item.taskId !== taskId); });
                     setWeeklyPlan(updatedPlan);
                 }
             };
 
-            const updateTaskStatus = (taskId, status) => { 
-                setTasks(tasks.map(t => t.id === taskId ? { ...t, status } : t)); 
-            };
-            const updateTaskPriority = (taskId, priority) => { 
-                setTasks(tasks.map(t => t.id === taskId ? { ...t, priority } : t)); 
-            };
-            const updateTaskTitle = (taskId, title) => { 
-                setTasks(tasks.map(t => t.id === taskId ? { ...t, title } : t)); 
-            };
-            const updateTaskDetails = (taskId, details) => { 
-                setTasks(tasks.map(t => t.id === taskId ? { ...t, details } : t)); 
-            };
-            const toggleTotallyDone = (taskId) => { 
-                setTasks(tasks.map(t => t.id === taskId ? { ...t, isTotallyDone: !t.isTotallyDone } : t)); 
-            };
+            const updateTaskStatus = (taskId, status) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, status } : t)); };
+            const updateTaskPriority = (taskId, priority) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, priority } : t)); };
+            const updateTaskTitle = (taskId, title) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, title } : t)); };
+            const updateTaskDetails = (taskId, details) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, details } : t)); };
+            const toggleTotallyDone = (taskId) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, isTotallyDone: !t.isTotallyDone } : t)); };
 
-            // --- ALT GÖREV (SUBTASK) İŞLEMLERİ ---
-            const updateSubTaskTitle = (taskId, subTaskId, title) => { 
-                setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, title } : sub) } : task)); 
-            };
-            const toggleSubTask = (taskId, subTaskId) => { 
-                setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, isCompleted: !sub.isCompleted } : sub) } : task)); 
-            };
-            const addSubTask = (taskId, title) => { 
-                if (!title.trim()) return; 
-                setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: [...task.subTasks, { id: "sub_" + Date.now(), title, isCompleted: false }] } : task)); 
-            };
+            const updateSubTaskTitle = (taskId, subTaskId, title) => { setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, title } : sub) } : task)); };
+            const toggleSubTask = (taskId, subTaskId) => { setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, isCompleted: !sub.isCompleted } : sub) } : task)); };
+            const addSubTask = (taskId, title) => { if (!title.trim()) return; setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: [...task.subTasks, { id: "sub_" + Date.now(), title, isCompleted: false }] } : task)); };
             const deleteSubTask = (taskId, subTaskId) => {
                 setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.filter(sub => sub.id !== subTaskId) } : task));
                 const updatedPlan = { ...weeklyPlan };
-                Object.keys(updatedPlan).forEach(day => { 
-                    updatedPlan[day] = updatedPlan[day].filter(item => item.subTaskId !== subTaskId); 
-                });
+                Object.keys(updatedPlan).forEach(day => { updatedPlan[day] = updatedPlan[day].filter(item => item.subTaskId !== subTaskId); });
                 setWeeklyPlan(updatedPlan);
             };
 
-            // --- ALIŞKANLIK (HABIT) İŞLEMLERİ ---
             const handleAddHabit = (e) => {
-                e.preventDefault(); 
-                if (!newHabitTitle.trim()) return;
+                e.preventDefault(); if (!newHabitTitle.trim()) return;
                 const newHabit = { id: "habit_" + Date.now(), title: newHabitTitle };
                 setHabits([...habits, newHabit]);
                 if (!selectedHabitId) setSelectedHabitId(newHabit.id);
-                setNewHabitTitle(""); 
-                setShowAddHabit(false);
+                setNewHabitTitle(""); setShowAddHabit(false);
             };
 
             const handleDeleteHabit = (habitId) => {
@@ -292,24 +233,15 @@
 
             const toggleHabitStatus = (habitId, dateStr) => {
                 setHabitLogs(prev => {
-                    const logs = prev[habitId] || {}; 
-                    const currentStatus = logs[dateStr];
-                    let nextStatus = "done"; 
-                    if (currentStatus === "done") nextStatus = "failed"; 
-                    else if (currentStatus === "failed") nextStatus = null;
+                    const logs = prev[habitId] || {}; const currentStatus = logs[dateStr];
+                    let nextStatus = "done"; if (currentStatus === "done") nextStatus = "failed"; else if (currentStatus === "failed") nextStatus = null;
                     const newLogs = { ...prev, [habitId]: { ...logs } };
-                    if (nextStatus) { 
-                        newLogs[habitId][dateStr] = nextStatus; 
-                    } else { 
-                        delete newLogs[habitId][dateStr]; 
-                    }
+                    if (nextStatus) { newLogs[habitId][dateStr] = nextStatus; } else { delete newLogs[habitId][dateStr]; }
                     return newLogs;
                 });
             };
 
-            const changeMonth = (offset) => { 
-                setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1)); 
-            };
+            const changeMonth = (offset) => { setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1)); };
 
             const clearDayPlan = (day) => {
                 if (window.confirm(`${day} gününün programını tamamen silmek istediğinize emin misiniz?`)) {
@@ -317,7 +249,14 @@
                 }
             };
 
-            // --- SAAT SEÇİCİ İLE HAFTALIK PLANA EKLEME ---
+            // YENİ: Arama Çubuğu kapanışta sıfırlanıyor
+            const closePlanningModal = () => {
+                setPlanningDay(null);
+                setPlanningSearchQuery("");
+                setStartTime(""); 
+                setEndTime(""); 
+            };
+
             const addToWeeklyPlan = (day, taskId, subTaskId = null) => {
                 let formattedTime = "";
                 if (startTime && endTime) {
@@ -334,17 +273,13 @@
                     time: formattedTime 
                 };
                 setWeeklyPlan({ ...weeklyPlan, [day]: [...weeklyPlan[day], newItem] });
-                setPlanningDay(null);
-                setStartTime(""); 
-                setEndTime(""); 
+                
+                // Kapandığında stateleri sıfırla
+                closePlanningModal();
             };
 
-            const updateWeeklyItemStatus = (day, itemId, status) => { 
-                setWeeklyPlan({ ...weeklyPlan, [day]: weeklyPlan[day].map(item => item.id === itemId ? { ...item, status } : item) }); 
-            };
-            const removeFromWeeklyPlan = (day, itemId) => { 
-                setWeeklyPlan({ ...weeklyPlan, [day]: weeklyPlan[day].filter(item => item.id !== itemId) }); 
-            };
+            const updateWeeklyItemStatus = (day, itemId, status) => { setWeeklyPlan({ ...weeklyPlan, [day]: weeklyPlan[day].map(item => item.id === itemId ? { ...item, status } : item) }); };
+            const removeFromWeeklyPlan = (day, itemId) => { setWeeklyPlan({ ...weeklyPlan, [day]: weeklyPlan[day].filter(item => item.id !== itemId) }); };
 
             const currentSelectedTask = tasks.find(t => t.id === selectedTaskId);
             const activeHabit = habits.find(h => h.id === selectedHabitId);
@@ -356,6 +291,21 @@
             firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
             const blankDays = Array.from({ length: firstDayIndex });
             const monthDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+            // YENİ: Modal (Görev Ekleme) için Arama Filtresi Mantığı
+            const filteredPlanningTasks = tasks.filter(t => {
+                if (t.isTotallyDone) return false; // Zaten bitmişleriösterme
+                if (!planningSearchQuery) return true; // Arama boşsa hepsini göster
+                
+                // Türkçe karakterlere duyarlı küçük harfe çevirme
+                const query = planningSearchQuery.toLocaleLowerCase('tr-TR');
+                const matchTitle = t.title.toLocaleLowerCase('tr-TR').includes(query);
+                
+                // Alt adımların isimlerini de tarama yeteneği (Smart Search)
+                const matchSub = t.subTasks.some(sub => sub.title.toLocaleLowerCase('tr-TR').includes(query));
+                
+                return matchTitle || matchSub;
+            });
 
             return (
                 <div className="flex flex-col md:flex-row h-screen overflow-hidden select-none bg-slate-50">
@@ -710,36 +660,51 @@
                             )}
                         </div>
 
-                        {/* PLANLAMA MODALİ (BAŞLANGIÇ - BİTİŞ SAATİ İLE) */}
+                        {/* PLANLAMA MODALİ VE AKILLI ARAMA ÇUBUĞU */}
                         {planningDay && (
                             <div className="glass-overlay fixed inset-0 flex items-end md:items-center justify-center z-50">
                                 <div className="animate-modal bg-white rounded-t-3xl md:rounded-2xl p-6 md:p-8 w-full md:w-[500px] h-[85vh] md:max-h-[85vh] flex flex-col shadow-2xl border border-slate-100">
-                                    <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+                                    <div className="flex justify-between items-center mb-5 pb-4 border-b border-slate-100">
                                         <h3 className="font-extrabold text-xl text-slate-800 text-gradient">{planningDay} Planı</h3>
-                                        <button onClick={() => setPlanningDay(null)} className="btn-press bg-slate-100 rounded-full w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-900 transition-colors">✕</button>
+                                        <button onClick={closePlanningModal} className="btn-press bg-slate-100 rounded-full w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-900 transition-colors">✕</button>
                                     </div>
                                     
-                                    {/* GERÇEK ZAMAN SEÇİCİLER (Başlangıç ve Bitiş) */}
-                                    <div className="mb-6 bg-indigo-50/50 border border-indigo-100 p-4 rounded-2xl shadow-sm">
+                                    {/* ZAMAN SEÇİCİLER (Başlangıç ve Bitiş) */}
+                                    <div className="mb-5 bg-indigo-50/50 border border-indigo-100 p-4 rounded-2xl shadow-sm shrink-0">
                                         <label className="block text-[11px] font-extrabold text-indigo-800 uppercase tracking-widest mb-3">🕒 Zaman Aralığı (Opsiyonel)</label>
                                         <div className="flex items-center space-x-4">
                                             <div className="flex-1">
                                                 <span className="text-[10px] font-bold text-slate-400 block mb-1">Başlangıç Saati</span>
-                                                <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-700 focus:border-indigo-500 outline-none shadow-sm transition-all" />
+                                                <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 focus:border-indigo-500 outline-none shadow-sm transition-all" />
                                             </div>
                                             <span className="text-slate-300 font-bold mt-4">-</span>
                                             <div className="flex-1">
                                                 <span className="text-[10px] font-bold text-slate-400 block mb-1">Bitiş Saati</span>
-                                                <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-700 focus:border-indigo-500 outline-none shadow-sm transition-all" />
+                                                <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 focus:border-indigo-500 outline-none shadow-sm transition-all" />
                                             </div>
                                         </div>
                                     </div>
 
+                                    {/* YENİ: AKILLI ARAMA ÇUBUĞU (Smart Search) */}
+                                    <div className="mb-4 relative shrink-0">
+                                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                        </div>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Görev veya alt adım ara..." 
+                                            value={planningSearchQuery}
+                                            onChange={e => setPlanningSearchQuery(e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm font-semibold text-slate-700 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all shadow-sm"
+                                        />
+                                    </div>
+
+                                    {/* FİLTRELENMİŞ GÖREV LİSTESİ */}
                                     <div className="flex-1 overflow-y-auto space-y-4 pb-10 pr-2 scrollbar-hide">
-                                        {tasks.filter(t => !t.isTotallyDone).length === 0 ? (
-                                            <p className="text-sm font-medium text-center py-10 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">Atanacak aktif görev yok.</p>
+                                        {filteredPlanningTasks.length === 0 ? (
+                                            <p className="text-sm font-medium text-center py-10 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">Aradığın kriterde aktif görev yok.</p>
                                         ) : (
-                                            tasks.filter(t => !t.isTotallyDone).map(task => (
+                                            filteredPlanningTasks.map(task => (
                                                 <div key={task.id} className="border border-slate-200 p-4 bg-white rounded-2xl hover:border-indigo-300 hover:shadow-md transition-all">
                                                     <div className="flex justify-between items-center mb-3">
                                                         <span className="text-sm font-extrabold text-slate-800 truncate pr-3 flex-1">{task.title}</span>
@@ -748,9 +713,9 @@
                                                     {task.subTasks.length > 0 && (
                                                         <div className="pl-4 border-l-2 border-slate-100 space-y-2 mt-3 pt-2">
                                                             {task.subTasks.map(sub => (
-                                                                <div key={sub.id} className="flex justify-between text-xs font-semibold text-slate-600 items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                                                <div key={sub.id} className="flex justify-between text-xs font-semibold text-slate-600 items-center bg-slate-50 p-2 rounded-lg border border-slate-100 hover:border-indigo-200 transition-colors">
                                                                     <span className="truncate pr-2">{sub.title}</span>
-                                                                    <button onClick={() => addToWeeklyPlan(planningDay, task.id, sub.id)} className="btn-press shrink-0 text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md hover:bg-indigo-100 transition-colors">Adım Ekle</button>
+                                                                    <button onClick={() => addToWeeklyPlan(planningDay, task.id, sub.id)} className="btn-press shrink-0 text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md hover:bg-indigo-100 transition-colors font-bold">Adım Ekle</button>
                                                                 </div>
                                                             ))}
                                                         </div>
