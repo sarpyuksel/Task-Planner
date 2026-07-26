@@ -1,102 +1,133 @@
-/* ========================================================
-   NOTION STYLE TASK MANAGER - CUSTOM STYLES & ANIMATIONS
-   ======================================================== */
+{
+    box-sizing: border-box;
+}
 
 body { 
     font-family: 'Inter', sans-serif; 
-    background-color: #fbfbfa; 
-    color: #37352f; 
+    background-color: #f4f7f9; 
+    color: #1e293b;
+    margin: 0;
+    padding: 0;
 }
 
-/* --- ÖZEL SCROLLBAR (KAYDIRMA ÇUBUĞU) --- */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(55, 53, 47, 0.1); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(55, 53, 47, 0.2); }
+/* --- ÖZEL SCROLLBAR TANIMLAMALARI --- */
+::-webkit-scrollbar { 
+    width: 6px; 
+    height: 6px; 
+}
+::-webkit-scrollbar-track { 
+    background: transparent; 
+}
+::-webkit-scrollbar-thumb { 
+    background: #cbd5e1; 
+    border-radius: 10px; 
+}
+::-webkit-scrollbar-thumb:hover { 
+    background: #94a3b8; 
+}
 
-/* --- AÇILIR MENÜ (SELECT) OKUNU GİZLEME --- */
+/* --- SELECT OKUNU ÖZELLEŞTİRME --- */
 select.status-select {
-    -webkit-appearance: none; -moz-appearance: none; appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+    -webkit-appearance: none; 
+    -moz-appearance: none; 
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg fill='%23475569' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
     background-repeat: no-repeat; 
-    background-position-x: 100%; 
+    background-position-x: 95%; 
     background-position-y: 50%; 
-    padding-right: 20px;
+    padding-right: 24px;
 }
 
-/* --- SATIR İÇİ DÜZENLEME (INLINE EDIT) --- */
-.inline-textarea { 
-    resize: none; 
-    overflow: hidden; 
-}
-
-/* --- DRAG & DROP (SÜRÜKLE BIRAK) --- */
-.draggable-card { cursor: grab; }
-.draggable-card:active { cursor: grabbing; }
-
-
-/* ========================================================
-   YENİ EKLENEN ANİMASYONLAR (UI/UX GELİŞTİRMELERİ)
-   ======================================================== */
-
-/* 1. Görev Kartları Hover Efekti (Yukarı Kalkma) */
+/* --- KART ANİMASYONLARI VE HOVER EFEKTLERİ --- */
 .task-card-anim {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 .task-card-anim:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
 }
 
-/* 2. Buton Tıklama Hissi (Küçülme) */
-.btn-press:active {
-    transform: scale(0.96);
+/* --- TIKLAMA HİSSİ (TACTILE FEEDBACK) --- */
+.btn-press { 
+    transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease; 
+}
+.btn-press:active { 
+    transform: scale(0.95); 
 }
 
-/* 3. Modal Açılış Animasyonu (Fade & Zoom) */
-@keyframes modalFadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+/* --- GLASSMORPHISM (BUZLU CAM ARKA PLAN) --- */
+.glass-overlay {
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* --- ANİMASYON KEYFRAMES --- */
+@keyframes popIn {
+    0% { 
+        opacity: 0; 
+        transform: scale(0.95) translateY(10px); 
+    }
+    100% { 
+        opacity: 1; 
+        transform: scale(1) translateY(0); 
+    }
 }
 .animate-modal {
-    animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* 4. Overlay (Karanlık Arka Plan) Animasyonu */
-@keyframes overlayFadeIn {
-    from { opacity: 0; backdrop-filter: blur(0px); }
-    to { opacity: 1; backdrop-filter: blur(2px); }
-}
-.animate-overlay {
-    animation: overlayFadeIn 0.25s ease-out forwards;
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+    }
+    to { 
+        opacity: 1; 
+    }
 }
 
-/* 5. Master Checkbox Animasyonları */
+/* --- MASTER CHECKBOX ÖZEL TASARIM --- */
 .master-checkbox {
     appearance: none;
-    width: 1.25rem; height: 1.25rem;
-    border: 2px solid #d1d5db; 
-    border-radius: 50%; 
-    display: grid; place-content: center; cursor: pointer; 
-    transition: all 0.2s ease-in-out;
+    width: 1.4rem; 
+    height: 1.4rem;
+    border: 2px solid #cbd5e1; 
+    border-radius: 6px; 
+    display: grid; 
+    place-content: center; 
+    cursor: pointer; 
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: white;
 }
 .master-checkbox::before {
     content: ""; 
-    width: 0.65em; height: 0.65em; 
-    transform: scale(0); transition: 120ms transform ease-in-out;
+    width: 0.75em; 
+    height: 0.75em; 
+    transform: scale(0); 
+    transition: 150ms transform cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: inset 1em 1em white;
     transform-origin: center;
     clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
 }
 .master-checkbox:checked { 
-    background-color: #16a34a; 
-    border-color: #16a34a; 
-    animation: bounceCheck 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background-color: #3b82f6; 
+    border-color: #3b82f6; 
+    animation: bounceCheck 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.master-checkbox:checked::before { transform: scale(1); }
+.master-checkbox:checked::before { 
+    transform: scale(1); 
+}
 
 @keyframes bounceCheck {
     0% { transform: scale(1); }
     50% { transform: scale(1.15); }
     100% { transform: scale(1); }
+}
+
+/* --- GRADIENT YAZI EFEKTİ --- */
+.text-gradient {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
