@@ -82,7 +82,10 @@
             const [activeView, setActiveView] = useState("tasks"); 
             const [selectedTaskId, setSelectedTaskId] = useState(null);
             const [filterCategory, setFilterCategory] = useState("Hepsi");
+            
+            // YENİ: Haftalık plana eklerken saat bilgisi tutmak için
             const [planningDay, setPlanningDay] = useState(null);
+            const [planningTime, setPlanningTime] = useState("");
 
             const [showAddForm, setShowAddForm] = useState(false);
             const [newTitle, setNewTitle] = useState("");
@@ -109,51 +112,35 @@
             useEffect(() => { localStorage.setItem("notion_habits", JSON.stringify(habits)); }, [habits]);
             useEffect(() => { localStorage.setItem("notion_habit_logs", JSON.stringify(habitLogs)); }, [habitLogs]);
 
-            // ==========================================
-            // GÜNCELLENMİŞ İÇE/DIŞA AKTAR (BLOB + HEALER)
-            // ==========================================
-            
             const exportData = () => {
-                const backupData = {
-                    categories, tasks, weeklyPlan, habits, habitLogs
-                };
-                
-                // Karakter bozulmasını kesin olarak önleyen Blob (Binary) paketleme
+                const backupData = { categories, tasks, weeklyPlan, habits, habitLogs };
                 const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json;charset=utf-8" });
                 const url = URL.createObjectURL(blob);
-                
                 const downloadAnchorNode = document.createElement('a');
                 downloadAnchorNode.setAttribute("href", url);
-                
                 const date = new Date().toISOString().slice(0, 10);
                 downloadAnchorNode.setAttribute("download", `task-planner-backup-${date}.json`);
-                
                 document.body.appendChild(downloadAnchorNode);
                 downloadAnchorNode.click();
                 downloadAnchorNode.remove();
-                URL.revokeObjectURL(url); // Hafızayı temizle
+                URL.revokeObjectURL(url);
             };
 
             const importData = (event) => {
                 const file = event.target.files[0];
                 if (!file) return;
-
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
                         const importedData = JSON.parse(e.target.result);
-                        
                         if(importedData.categories) setCategories(importedData.categories);
                         if(importedData.tasks) setTasks(importedData.tasks);
                         if(importedData.habits) setHabits(importedData.habits);
                         if(importedData.habitLogs) setHabitLogs(importedData.habitLogs);
-                        
-                        // HAFTALIK PLAN KURTARICI (Data Healer)
                         if(importedData.weeklyPlan) {
                             const wp = importedData.weeklyPlan;
                             const safePlan = {
                                 "Pazartesi": wp["Pazartesi"] || [],
-                                // Bozulmuş olabilecek isimleri esnek hece takibi ile kurtarıyoruz
                                 "Salı": wp["Salı"] || wp[Object.keys(wp).find(k => k.includes("al"))] || [],
                                 "Çarşamba": wp["Çarşamba"] || wp[Object.keys(wp).find(k => k.includes("amba"))] || [],
                                 "Perşembe": wp["Perşembe"] || wp[Object.keys(wp).find(k => k.includes("embe"))] || [],
@@ -163,17 +150,12 @@
                             };
                             setWeeklyPlan(safePlan);
                         }
-                        
                         alert("Veriler başarıyla yüklendi! Çalışma alanınız güncellendi. 🎉");
                         event.target.value = ""; 
-                    } catch (error) {
-                        alert("Hata: Yüklediğiniz dosya geçerli bir yedekleme (JSON) formatında değil.");
-                    }
+                    } catch (error) { alert("Hata: Yüklediğiniz dosya geçerli bir yedekleme (JSON) formatında değil."); }
                 };
                 reader.readAsText(file);
             };
-
-            // ==========================================
 
             const handleDragStart = (e, day, index) => { dragItem.current = { day, index }; setTimeout(() => { e.target.style.opacity = '0.4'; }, 0); };
             const handleDragEnter = (e, day, index) => { dragOverItem.current = { day, index }; };
@@ -192,45 +174,6 @@
                 newPlan[targetDay].splice(destIndex, 0, itemToMove);
                 setWeeklyPlan(newPlan);
             };
-
-            const handleAddHabit = (e) => {
-                e.preventDefault();
-                if (!newHabitTitle.trim()) return;
-                const newHabit = { id: "habit_" + Date.now(), title: newHabitTitle };
-                setHabits([...habits, newHabit]);
-                if (!selectedHabitId) setSelectedHabitId(newHabit.id);
-                setNewHabitTitle(""); setShowAddHabit(false);
-            };
-
-            const handleDeleteHabit = (habitId) => {
-                if (window.confirm("Bu alışkanlığı silmek istediğinize emin misiniz?")) {
-                    setHabits(habits.filter(h => h.id !== habitId));
-                    if (selectedHabitId === habitId) setSelectedHabitId(habits.length > 1 ? habits[0].id : null);
-                }
-            };
-
-            const toggleHabitStatus = (habitId, dateStr) => {
-                setHabitLogs(prev => {
-                    const logs = prev[habitId] || {};
-                    const currentStatus = logs[dateStr];
-                    let nextStatus = "done";
-                    if (currentStatus === "done") nextStatus = "failed";
-                    else if (currentStatus === "failed") nextStatus = null;
-                    const newLogs = { ...prev, [habitId]: { ...logs } };
-                    if (nextStatus) { newLogs[habitId][dateStr] = nextStatus; } else { delete newLogs[habitId][dateStr]; }
-                    return newLogs;
-                });
-            };
-
-            const changeMonth = (offset) => { setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1)); };
-
-            const year = currentMonth.getFullYear();
-            const month = currentMonth.getMonth();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            let firstDayIndex = new Date(year, month, 1).getDay();
-            firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
-            const blankDays = Array.from({ length: firstDayIndex });
-            const monthDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
             const handleAddCategory = (e) => {
                 e.preventDefault();
@@ -276,10 +219,56 @@
                 setWeeklyPlan(updatedPlan);
             };
 
+            const handleAddHabit = (e) => {
+                e.preventDefault();
+                if (!newHabitTitle.trim()) return;
+                const newHabit = { id: "habit_" + Date.now(), title: newHabitTitle };
+                setHabits([...habits, newHabit]);
+                if (!selectedHabitId) setSelectedHabitId(newHabit.id);
+                setNewHabitTitle(""); setShowAddHabit(false);
+            };
+
+            const handleDeleteHabit = (habitId) => {
+                if (window.confirm("Bu alışkanlığı silmek istediğinize emin misiniz?")) {
+                    setHabits(habits.filter(h => h.id !== habitId));
+                    if (selectedHabitId === habitId) setSelectedHabitId(habits.length > 1 ? habits[0].id : null);
+                }
+            };
+
+            const toggleHabitStatus = (habitId, dateStr) => {
+                setHabitLogs(prev => {
+                    const logs = prev[habitId] || {};
+                    const currentStatus = logs[dateStr];
+                    let nextStatus = "done";
+                    if (currentStatus === "done") nextStatus = "failed";
+                    else if (currentStatus === "failed") nextStatus = null;
+                    const newLogs = { ...prev, [habitId]: { ...logs } };
+                    if (nextStatus) { newLogs[habitId][dateStr] = nextStatus; } else { delete newLogs[habitId][dateStr]; }
+                    return newLogs;
+                });
+            };
+
+            const changeMonth = (offset) => { setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1)); };
+
+            // YENİ: Günü tamamen boşaltma fonksiyonu
+            const clearDayPlan = (day) => {
+                if (window.confirm(`${day} gününün programını tamamen temizlemek istediğinize emin misiniz?`)) {
+                    setWeeklyPlan({ ...weeklyPlan, [day]: [] });
+                }
+            };
+
+            // GÜNCELLENDİ: time parametresi eklendi
             const addToWeeklyPlan = (day, taskId, subTaskId = null) => {
-                const newItem = { id: "wp_" + Date.now(), taskId, subTaskId, status: "Not Started" };
+                const newItem = { 
+                    id: "wp_" + Date.now(), 
+                    taskId, 
+                    subTaskId, 
+                    status: "Not Started",
+                    time: planningTime // Saat bilgisini kaydediyoruz
+                };
                 setWeeklyPlan({ ...weeklyPlan, [day]: [...weeklyPlan[day], newItem] });
                 setPlanningDay(null);
+                setPlanningTime(""); // İşlem bitince inputu sıfırla
             };
 
             const updateWeeklyItemStatus = (day, itemId, status) => { setWeeklyPlan({ ...weeklyPlan, [day]: weeklyPlan[day].map(item => item.id === itemId ? { ...item, status } : item) }); };
@@ -288,8 +277,16 @@
             const currentSelectedTask = tasks.find(t => t.id === selectedTaskId);
             const activeHabit = habits.find(h => h.id === selectedHabitId);
 
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            let firstDayIndex = new Date(year, month, 1).getDay();
+            firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+            const blankDays = Array.from({ length: firstDayIndex });
+            const monthDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
             return (
-                <div className="flex flex-col md:flex-row h-screen overflow-hidden select-none">
+                <div className="flex flex-col md:flex-row h-screen overflow-hidden select-none bg-[#fbfbfa]">
                     
                     {/* SIDEBAR */}
                     <div className="w-full md:w-64 bg-[#f3f3f2] md:border-r border-b border-[#e8e8e8] flex flex-col justify-between p-3 shrink-0 z-10">
@@ -317,7 +314,7 @@
                     </div>
 
                     {/* MAIN CONTENT AREA */}
-                    <div className="flex-1 flex flex-col overflow-hidden relative bg-[#fbfbfa]">
+                    <div className="flex-1 flex flex-col overflow-hidden relative">
                         
                         {/* VIEW 1: TÜM GÖREVLER */}
                         {activeView === "tasks" && (
@@ -392,29 +389,18 @@
 
                                         return (
                                             <div 
-                                                key={task.id} 
-                                                onClick={() => setSelectedTaskId(task.id)} 
+                                                key={task.id} onClick={() => setSelectedTaskId(task.id)} 
                                                 className={`task-card-anim group flex flex-col md:flex-row items-start md:items-center justify-between p-3 bg-white border ${isDone ? 'border-green-300 bg-green-50/40 opacity-80' : 'border-[#e8e8e8]'} rounded-md shadow-sm cursor-pointer gap-2 md:gap-0`}
                                             >
                                                 <div className="flex items-center space-x-3 w-full md:w-auto truncate flex-1">
-                                                    <input 
-                                                        type="checkbox" checked={isDone}
-                                                        onClick={(e) => e.stopPropagation()} 
-                                                        onChange={(e) => { e.stopPropagation(); toggleTotallyDone(task.id); }}
-                                                        className="master-checkbox shrink-0" title="Görevi Tamamen Bitir"
-                                                    />
+                                                    <input type="checkbox" checked={isDone} onClick={(e) => e.stopPropagation()} onChange={(e) => { e.stopPropagation(); toggleTotallyDone(task.id); }} className="master-checkbox shrink-0" title="Görevi Tamamen Bitir" />
                                                     <span style={{ backgroundColor: catConfig.color, color: catConfig.text }} className={`px-2 py-0.5 rounded text-[10px] md:text-xs font-semibold shrink-0 transition-opacity ${isDone ? 'opacity-60' : ''}`}>{task.category}</span>
                                                     <span className={`font-medium text-sm truncate transition-all ${isDone ? 'line-through text-neutral-400' : 'text-[#37352f] group-hover:text-blue-600'}`}>{task.title}</span>
                                                 </div>
-                                                
                                                 <div className="flex items-center space-x-2 md:space-x-3 shrink-0 w-full md:w-auto justify-between md:justify-end pl-8 md:pl-0">
                                                     {!isDone && (
                                                         <div className="flex space-x-2">
-                                                            <select 
-                                                                value={taskStatus} onClick={(e) => e.stopPropagation()} 
-                                                                onChange={(e) => { e.stopPropagation(); updateTaskStatus(task.id, e.target.value); }}
-                                                                className={`btn-press status-select text-[10px] md:text-[11px] font-semibold border rounded-full px-2 py-0.5 outline-none cursor-pointer transition-colors ${statusStyles[taskStatus]}`}
-                                                            >
+                                                            <select value={taskStatus} onClick={(e) => e.stopPropagation()} onChange={(e) => { e.stopPropagation(); updateTaskStatus(task.id, e.target.value); }} className={`btn-press status-select text-[10px] md:text-[11px] font-semibold border rounded-full px-2 py-0.5 outline-none cursor-pointer transition-colors ${statusStyles[taskStatus]}`}>
                                                                 {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                                                             </select>
                                                             <span style={{ color: priorityColor }} className="text-[10px] md:text-[11px] font-bold border border-transparent px-1 mt-0.5">{taskPriority}</span>
@@ -432,23 +418,27 @@
 
                         {/* VIEW 2: HAFTALIK PLAN */}
                         {activeView === "weekly" && (
-                            <div className="flex-1 overflow-x-auto overflow-y-auto p-4 md:p-10 animate-modal">
+                            <div className="flex-1 overflow-x-auto overflow-y-auto p-4 md:p-10 animate-modal bg-[#fbfbfa]">
                                 <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#37352f] mb-4 md:mb-6 max-w-7xl mx-auto">📅 Haftalık Çizelge</h1>
                                 
-                                <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 lg:gap-3 max-w-7xl mx-auto">
+                                {/* YENİ TASARIM: Daha profesyonel board görünümü */}
+                                <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 lg:gap-4 max-w-7xl mx-auto">
                                     {DAYS_OF_WEEK.map(day => (
                                         <div 
                                             key={day} 
                                             onDragOver={(e) => e.preventDefault()}
                                             onDrop={(e) => handleDrop(e, day)}
-                                            className="bg-[#f7f7f5] rounded-xl p-3 border border-[#e8e8e8] flex flex-col h-auto min-h-[150px] lg:h-[calc(100vh-180px)] transition-colors hover:border-neutral-300"
+                                            className="bg-white rounded-xl p-3 border border-neutral-200 shadow-sm flex flex-col h-auto min-h-[200px] lg:h-[calc(100vh-180px)] transition-all hover:shadow-md"
                                         >
-                                            <div className="flex justify-between items-center mb-3 pb-1 border-b border-neutral-200">
-                                                <span className="font-semibold text-sm text-neutral-700">{day}</span>
-                                                <button onClick={() => setPlanningDay(day)} className="btn-press w-6 h-6 md:w-5 md:h-5 rounded hover:bg-neutral-200 flex items-center justify-center text-neutral-500 text-lg md:text-sm transition-colors">+</button>
+                                            {/* GÜNCELLENDİ: Çöp kutusu (Temizle) butonu */}
+                                            <div className="flex justify-between items-center mb-3 pb-2 border-b-2 border-neutral-100">
+                                                <span className="font-bold text-sm text-neutral-800 uppercase tracking-wider">{day}</span>
+                                                <button onClick={() => clearDayPlan(day)} className="btn-press text-neutral-300 hover:text-red-500 transition-colors p-1" title={`${day} Günü Programını Temizle`}>
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                </button>
                                             </div>
                                             
-                                            <div className="space-y-2 flex-1 lg:overflow-y-auto pr-1 pb-2 lg:pb-10">
+                                            <div className="space-y-3 flex-1 lg:overflow-y-auto pr-1 pb-2">
                                                 {weeklyPlan[day]?.map((item, index) => {
                                                     const parentTask = tasks.find(t => t.id === item.taskId);
                                                     if (!parentTask) return null;
@@ -468,35 +458,44 @@
                                                             onDragEnter={(e) => handleDragEnter(e, day, index)}
                                                             onDragEnd={handleDragEnd}
                                                             onDragOver={(e) => e.preventDefault()}
-                                                            style={{ backgroundColor: pStyle.bg, borderColor: pStyle.border }}
-                                                            className={`task-card-anim draggable-card border rounded p-3 md:p-2.5 shadow-sm group relative flex flex-col ${isTotallyDone ? 'opacity-50 grayscale' : ''}`}
+                                                            style={{ borderLeftColor: pStyle.text }}
+                                                            className={`task-card-anim draggable-card bg-[#fcfcfc] border border-neutral-200 border-l-4 rounded-lg p-3 shadow-sm group relative flex flex-col ${isTotallyDone ? 'opacity-50 grayscale' : ''}`}
                                                         >
                                                             <button 
                                                                 onClick={(e) => { e.stopPropagation(); removeFromWeeklyPlan(day, item.id); }} 
-                                                                className="btn-press absolute top-2 right-2 md:top-1 md:right-1 md:opacity-0 group-hover:opacity-100 text-red-500 text-sm md:text-xs bg-white rounded-full w-5 h-5 md:w-4 md:h-4 flex items-center justify-center shadow transition-all"
+                                                                className="btn-press absolute top-2 right-2 md:opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 text-sm bg-white rounded-full w-5 h-5 flex items-center justify-center shadow transition-all"
                                                             >✕</button>
                                                             
+                                                            {/* YENİ: Saat/Süre Rozeti */}
+                                                            {item.time && (
+                                                                <div className="mb-2 inline-flex">
+                                                                    <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                                                        <span>🕗</span> {item.time}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                            
                                                             {subTask ? (
-                                                                <div className="pr-5 md:pr-4 break-words mb-2 pointer-events-none">
-                                                                    <div className={`text-[11px] md:text-[10px] opacity-60 line-through mb-0.5`}>{parentTask.title}</div>
-                                                                    <div className={`text-sm md:text-xs font-semibold text-[#37352f] leading-snug transition-all ${isTotallyDone ? 'line-through' : ''}`}>
+                                                                <div className="pr-5 break-words mb-3 pointer-events-none">
+                                                                    <div className={`text-[10px] text-neutral-400 line-through mb-1`}>{parentTask.title}</div>
+                                                                    <div className={`text-xs font-semibold text-[#37352f] leading-snug transition-all ${isTotallyDone ? 'line-through' : ''}`}>
                                                                         🔹 {subTask.title}
                                                                     </div>
                                                                 </div>
                                                             ) : (
-                                                                <div className={`text-sm md:text-xs font-semibold text-[#37352f] leading-snug pr-5 md:pr-4 break-words mb-2 pointer-events-none transition-all ${isTotallyDone ? 'line-through' : ''}`}>
+                                                                <div className={`text-xs font-semibold text-[#37352f] leading-snug pr-5 break-words mb-3 pointer-events-none transition-all ${isTotallyDone ? 'line-through' : ''}`}>
                                                                     📌 {parentTask.title}
                                                                 </div>
                                                             )}
 
-                                                            <div className="mt-auto pt-2 md:pt-1 border-t border-black/5 flex justify-between items-center">
+                                                            <div className="mt-auto flex justify-between items-center">
                                                                 {isTotallyDone ? (
-                                                                    <span className="text-[10px] md:text-[9px] font-bold text-green-700">TÜMÜ BİTTİ</span>
+                                                                    <span className="text-[9px] font-bold text-green-700">TÜMÜ BİTTİ</span>
                                                                 ) : (
                                                                     <select 
                                                                         value={itemStatus} onClick={(e) => e.stopPropagation()}
                                                                         onChange={(e) => { e.stopPropagation(); updateWeeklyItemStatus(day, item.id, e.target.value); }}
-                                                                        className={`status-select text-[10px] md:text-[9px] font-bold border rounded-full px-2 md:px-1.5 py-1 md:py-0.5 outline-none cursor-pointer transition-colors ${statusStyles[itemStatus]}`}
+                                                                        className={`status-select text-[9px] font-bold border rounded-full px-1.5 py-0.5 outline-none cursor-pointer transition-colors ${statusStyles[itemStatus]}`}
                                                                     >
                                                                         {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                                                                     </select>
@@ -506,6 +505,11 @@
                                                     );
                                                 })}
                                             </div>
+                                            
+                                            {/* GÜNCELLENDİ: Sütun altındaki ergonomik ekleme butonu */}
+                                            <button onClick={() => setPlanningDay(day)} className="btn-press mt-3 w-full py-2.5 border-2 border-dashed border-neutral-200 text-neutral-500 font-semibold text-xs rounded-lg hover:bg-neutral-50 hover:border-neutral-300 transition-all flex items-center justify-center space-x-1">
+                                                <span>+ Programa Ekle</span>
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
@@ -735,26 +739,39 @@
                         {/* PLANLAMA MODALİ (Tasks İçin) */}
                         {planningDay && (
                             <div className="animate-overlay fixed inset-0 bg-black/50 md:bg-black/30 flex items-end md:items-center justify-center z-50">
-                                <div className="animate-modal bg-white rounded-t-2xl md:rounded-lg p-5 w-full md:w-[400px] h-[70vh] md:max-h-[80vh] flex flex-col shadow-2xl">
-                                    <div className="flex justify-between items-center mb-4 border-b pb-3">
-                                        <h3 className="font-bold text-base md:text-sm">{planningDay} Gününe Görev Ata</h3>
+                                <div className="animate-modal bg-white rounded-t-2xl md:rounded-lg p-6 w-full md:w-[450px] h-[75vh] md:max-h-[85vh] flex flex-col shadow-2xl">
+                                    <div className="flex justify-between items-center mb-6 border-b pb-3">
+                                        <h3 className="font-bold text-lg md:text-base">{planningDay} Gününe Ekle</h3>
                                         <button onClick={() => setPlanningDay(null)} className="btn-press bg-neutral-100 md:bg-transparent rounded-full w-8 h-8 md:w-auto md:h-auto flex items-center justify-center text-neutral-600 hover:text-neutral-900 transition-colors">✕</button>
                                     </div>
-                                    <div className="flex-1 overflow-y-auto space-y-4 pb-10">
+                                    
+                                    {/* YENİ: SAAT / SÜRE BELİRLEME İNPUTU */}
+                                    <div className="mb-5 bg-blue-50 border border-blue-100 p-3 rounded-lg">
+                                        <label className="block text-[11px] font-bold text-blue-800 uppercase tracking-wide mb-1.5">Saat / Süre (Opsiyonel)</label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Örn: 14:00 - 15:30" 
+                                            value={planningTime} 
+                                            onChange={e => setPlanningTime(e.target.value)} 
+                                            className="w-full border border-blue-200 rounded px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" 
+                                        />
+                                    </div>
+
+                                    <div className="flex-1 overflow-y-auto space-y-4 pb-10 pr-1">
                                         {tasks.filter(t => !t.isTotallyDone).length === 0 ? (
                                             <p className="text-sm md:text-xs text-center py-4 text-neutral-400">Atanacak aktif görev yok.</p>
                                         ) : (
                                             tasks.filter(t => !t.isTotallyDone).map(task => (
-                                                <div key={task.id} className="border border-neutral-200 p-3 md:p-2 bg-neutral-50 rounded hover:border-neutral-300 transition-colors">
+                                                <div key={task.id} className="border border-neutral-200 p-3 bg-neutral-50 rounded hover:border-neutral-300 transition-colors shadow-sm">
                                                     <div className="flex justify-between items-center mb-2">
                                                         <span className="text-sm md:text-xs font-bold truncate pr-2 flex-1">{task.title}</span>
-                                                        <button onClick={() => addToWeeklyPlan(planningDay, task.id)} className="btn-press shrink-0 bg-neutral-800 text-white text-xs md:text-[10px] px-3 md:px-2 py-1.5 md:py-0.5 rounded hover:bg-neutral-700 transition-colors">Ana Görevi Ekle</button>
+                                                        <button onClick={() => addToWeeklyPlan(planningDay, task.id)} className="btn-press shrink-0 bg-neutral-800 text-white text-xs md:text-[10px] px-3 md:px-2 py-1.5 md:py-1 rounded hover:bg-neutral-700 transition-colors">Görevi Ekle</button>
                                                     </div>
-                                                    <div className="pl-3 md:pl-2 border-l-2 border-neutral-300 space-y-2 md:space-y-1 mt-2">
+                                                    <div className="pl-3 md:pl-2 border-l-2 border-neutral-300 space-y-2 md:space-y-1 mt-3">
                                                         {task.subTasks.map(sub => (
                                                             <div key={sub.id} className="flex justify-between text-xs md:text-[11px] items-center">
                                                                 <span className="truncate pr-2">{sub.title}</span>
-                                                                <button onClick={() => addToWeeklyPlan(planningDay, task.id, sub.id)} className="btn-press shrink-0 text-blue-600 font-semibold hover:underline transition-all py-1">Adımı Ekle</button>
+                                                                <button onClick={() => addToWeeklyPlan(planningDay, task.id, sub.id)} className="btn-press shrink-0 text-blue-600 font-bold hover:underline transition-all py-1">Adımı Ekle</button>
                                                             </div>
                                                         ))}
                                                     </div>
