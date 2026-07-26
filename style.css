@@ -131,3 +131,49 @@ select.status-select {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
+/* ========================================================
+   GLOBAL KARANLIK MOD (DARK MODE) AYARLARI
+   ======================================================== */
+html.dark body {
+    background-color: #0f172a;
+    color: #f1f5f9;
+}
+
+/* Tüm beyaz arkaplanlı kartları ve inputları koyulaştırır */
+html.dark .bg-white,
+html.dark .bg-slate-50,
+html.dark .bg-\[\#f4f7f9\],
+html.dark .bg-\[\#fbfbfa\] {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+/* Yazı renklerini okunaklı hale getirir */
+html.dark .text-slate-800,
+html.dark .text-\[\#37352f\],
+html.dark .text-slate-700 {
+    color: #f8fafc !important;
+}
+html.dark .text-slate-500,
+html.dark .text-slate-600 {
+    color: #94a3b8 !important;
+}
+
+/* Input, select ve textarea elementleri */
+html.dark input, 
+html.dark textarea, 
+html.dark select {
+    background-color: #0f172a !important;
+    color: #f1f5f9 !important;
+    border-color: #334155 !important;
+}
+
+/* Çerçeveler ve gölgeleri karanlık moda uydur */
+html.dark .border-slate-200,
+html.dark .border-slate-100 {
+    border-color: #334155 !important;
+}
+html.dark .shadow-xl, html.dark .shadow-sm, html.dark .shadow-md {
+    box-shadow: none !important; /* Karanlık modda gölgeler sırıtır, kapatıyoruz */
+}

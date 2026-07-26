@@ -80,6 +80,21 @@
             });
 
             const [activeView, setActiveView] = useState("tasks"); 
+            // --- TEMA (DARK MODE) STATE'İ ---
+const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem("notion_theme");
+    return saved === "dark" ? true : false;
+});
+
+// Tema değiştiğinde HTML'e class ekle/çıkar ve hafızaya kaydet
+useEffect(() => {
+    if (isDark) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem("notion_theme", isDark ? "dark" : "light");
+}, [isDark]);
             const [selectedTaskId, setSelectedTaskId] = useState(null);
             const [filterCategory, setFilterCategory] = useState("Hepsi");
             
@@ -600,6 +615,36 @@
                                 <h1 className="text-3xl font-extrabold tracking-tight text-slate-800 mb-3 text-gradient">⚙️ Ayarlar & Veri</h1>
                                 <p className="text-sm font-medium text-slate-500 mb-10">Verilerin cihazında güvende. Aktarmak için aşağıdaki modern araçları kullan.</p>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {/* TEMA SEÇİM KARTI */}
+<div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-xl shadow-slate-200/50 flex flex-col items-center text-center transition-colors">
+    <h3 className="font-extrabold text-lg text-slate-800 mb-3">Görünüm Teması</h3>
+    <p className="text-sm font-medium text-slate-500 mb-8 flex-1">Aydınlık veya karanlık tema arasında geçiş yap.</p>
+    
+    {/* TEMA BUTONU (Resimdeki Birebir Tasarım) */}
+    <div 
+        onClick={() => setIsDark(!isDark)}
+        className={`relative w-[88px] h-[44px] rounded-full flex items-center p-1 cursor-pointer transition-colors duration-300 ${isDark ? 'bg-[#1a1a1a]' : 'bg-white shadow-sm border border-slate-200'}`}
+    >
+        {/* Alt Katman: Sabit İkonlar */}
+        <div className="w-full flex justify-between px-1.5">
+            {/* Karanlık Modda Görünen Gri Güneş */}
+            <svg className={`w-6 h-6 transition-colors ${isDark ? 'text-slate-400' : 'text-transparent'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            {/* Aydınlık Modda Görünen Gri Ay */}
+            <svg className={`w-5 h-5 transition-colors ${isDark ? 'text-transparent' : 'text-slate-400'}`} fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+        </div>
+        
+        {/* Üst Katman: Kayan Mavi Yuvarlak ve İçindeki Beyaz İkon */}
+        <div className={`absolute left-1 w-9 h-9 bg-[#0b57d0] rounded-full transition-transform duration-300 flex items-center justify-center ${isDark ? 'translate-x-[44px]' : 'translate-x-0'}`}>
+            {isDark ? (
+                /* Karanlık Modda Mavi Yuvarlak İçindeki Beyaz Ay */
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+            ) : (
+                /* Aydınlık Modda Mavi Yuvarlak İçindeki Beyaz Güneş */
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            )}
+        </div>
+    </div>
+</div>
                                     <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-xl shadow-slate-200/50 flex flex-col items-center text-center hover:border-blue-300 transition-colors">
                                         <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600 rounded-2xl flex items-center justify-center text-4xl mb-6 shadow-sm">📥</div>
                                         <h3 className="font-extrabold text-lg text-slate-800 mb-3">Yedeği İndir</h3>
