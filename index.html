@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Premium Task Manager & Weekly Planner</title>
     
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏆</text></svg>">
     <link rel="stylesheet" href="style.css">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -54,42 +54,35 @@
         const MONTH_NAMES = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 
         function App() {
-            // --- STATE TANIMLAMALARI VE LOCALSTORAGE ENTEGRASYONU ---
-            const [categories, setCategories] = useState(() => {
-                const saved = localStorage.getItem("notion_categories");
-                return saved ? JSON.parse(saved) : defaultCategories;
+            // ==========================================
+            // 1. KİMLİK DOĞRULAMA (AUTH) STATE'LERİ
+            // ==========================================
+            const [users, setUsers] = useState(() => JSON.parse(localStorage.getItem("task_users")) || []);
+            const [currentUser, setCurrentUser] = useState(() => JSON.parse(localStorage.getItem("task_current_user")) || null);
+            const [authMode, setAuthMode] = useState("login");
+            const [authForm, setAuthForm] = useState({ name: "", email: "", password: "" });
+
+            // ==========================================
+            // 2. TEMA (DARK MODE) STATE'İ
+            // ==========================================
+            const [isDark, setIsDark] = useState(() => {
+                const saved = localStorage.getItem("notion_theme");
+                return saved === "dark" ? true : false;
             });
 
-            const [tasks, setTasks] = useState(() => {
-                const saved = localStorage.getItem("notion_tasks");
-                return saved ? JSON.parse(saved) : [];
-            });
-
-            const [weeklyPlan, setWeeklyPlan] = useState(() => {
-                const saved = localStorage.getItem("notion_weekly_plan");
-                return saved ? JSON.parse(saved) : { "Pazartesi": [], "Salı": [], "Çarşamba": [], "Perşembe": [], "Cuma": [], "Cumartesi": [], "Pazar": [] };
-            });
-
-            const [habits, setHabits] = useState(() => {
-                const saved = localStorage.getItem("notion_habits");
-                return saved ? JSON.parse(saved) : [{ id: "habit-1", title: "Su İç (2.5L)" }];
-            });
-
-            const [habitLogs, setHabitLogs] = useState(() => {
-                const saved = localStorage.getItem("notion_habit_logs");
-                return saved ? JSON.parse(saved) : {};
-            });
+            // Diğer State'ler
+            const [categories, setCategories] = useState(() => JSON.parse(localStorage.getItem("notion_categories")) || defaultCategories);
+            const [tasks, setTasks] = useState(() => JSON.parse(localStorage.getItem("notion_tasks")) || []);
+            const [weeklyPlan, setWeeklyPlan] = useState(() => JSON.parse(localStorage.getItem("notion_weekly_plan")) || { "Pazartesi": [], "Salı": [], "Çarşamba": [], "Perşembe": [], "Cuma": [], "Cumartesi": [], "Pazar": [] });
+            const [habits, setHabits] = useState(() => JSON.parse(localStorage.getItem("notion_habits")) || [{ id: "habit-1", title: "Su İç (2.5L)" }]);
+            const [habitLogs, setHabitLogs] = useState(() => JSON.parse(localStorage.getItem("notion_habit_logs")) || {});
 
             const [activeView, setActiveView] = useState("tasks"); 
             const [selectedTaskId, setSelectedTaskId] = useState(null);
             const [filterCategory, setFilterCategory] = useState("Hepsi");
-            
-            // Haftalık plana saat ekleme state'leri
             const [planningDay, setPlanningDay] = useState(null);
             const [startTime, setStartTime] = useState("");
             const [endTime, setEndTime] = useState("");
-
-            // YENİ: Arama Çubuğu State'i (Modal İçin)
             const [planningSearchQuery, setPlanningSearchQuery] = useState("");
 
             const [showAddForm, setShowAddForm] = useState(false);
@@ -98,51 +91,59 @@
             const [newDetails, setNewDetails] = useState("");
             const [newPriority, setNewPriority] = useState("Orta");
             const [newStatus, setNewStatus] = useState("Not Started");
-
             const [showAddCategory, setShowAddCategory] = useState(false);
             const [newCategoryName, setNewCategoryName] = useState("");
-
             const [selectedHabitId, setSelectedHabitId] = useState(habits[0]?.id || null);
             const [showAddHabit, setShowAddHabit] = useState(false);
             const [newHabitTitle, setNewHabitTitle] = useState("");
             const [currentMonth, setCurrentMonth] = useState(new Date());
 
-            // --- TEMA (DARK MODE) STATE'İ ---
-            const [isDark, setIsDark] = useState(() => {
-                const saved = localStorage.getItem("notion_theme");
-                return saved === "dark" ? true : false;
-            });
-
-            // Tema değiştiğinde HTML'e class ekle/çıkar ve hafızaya kaydet
-            useEffect(() => {
-                if (isDark) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
-                localStorage.setItem("notion_theme", isDark ? "dark" : "light");
-            }, [isDark]);
-
             const dragItem = useRef(null);
             const dragOverItem = useRef(null);
             const fileInputRef = useRef(null);
 
+            // ==========================================
+            // USE EFFECT (KAYIT VE SENKRONİZASYON)
+            // ==========================================
+            useEffect(() => { localStorage.setItem("task_users", JSON.stringify(users)); }, [users]);
+            useEffect(() => { localStorage.setItem("task_current_user", JSON.stringify(currentUser)); }, [currentUser]);
             useEffect(() => { localStorage.setItem("notion_categories", JSON.stringify(categories)); }, [categories]);
             useEffect(() => { localStorage.setItem("notion_tasks", JSON.stringify(tasks)); }, [tasks]);
             useEffect(() => { localStorage.setItem("notion_weekly_plan", JSON.stringify(weeklyPlan)); }, [weeklyPlan]);
             useEffect(() => { localStorage.setItem("notion_habits", JSON.stringify(habits)); }, [habits]);
             useEffect(() => { localStorage.setItem("notion_habit_logs", JSON.stringify(habitLogs)); }, [habitLogs]);
+            
+            useEffect(() => {
+                if (isDark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+                localStorage.setItem("notion_theme", isDark ? "dark" : "light");
+            }, [isDark]);
 
-            // --- YEDEKLEME FONKSİYONLARI ---
+            // ==========================================
+            // FONKSİYONLAR
+            // ==========================================
+            const handleAuth = (e) => {
+                e.preventDefault();
+                if (authMode === "register") {
+                    if (users.find(u => u.email === authForm.email)) return alert("Bu mail zaten kayıtlı!");
+                    const newUser = { id: Date.now(), ...authForm };
+                    setUsers([...users, newUser]);
+                    setCurrentUser(newUser);
+                } else {
+                    const user = users.find(u => u.email === authForm.email && u.password === authForm.password);
+                    if (user) setCurrentUser(user);
+                    else alert("Hatalı mail veya şifre!");
+                }
+            };
+            const handleLogout = () => { setCurrentUser(null); setAuthForm({ name: "", email: "", password: "" }); };
+
             const exportData = () => {
                 const backupData = { categories, tasks, weeklyPlan, habits, habitLogs };
                 const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json;charset=utf-8" });
                 const url = URL.createObjectURL(blob);
-                const a = document.createElement('a'); 
-                a.href = url;
+                const a = document.createElement('a'); a.href = url;
                 a.download = `premium-backup-${new Date().toISOString().slice(0, 10)}.json`;
-                a.click(); 
-                URL.revokeObjectURL(url);
+                a.click(); URL.revokeObjectURL(url);
             };
 
             const importData = (event) => {
@@ -159,46 +160,27 @@
                         if(importedData.weeklyPlan) {
                             const wp = importedData.weeklyPlan;
                             setWeeklyPlan({
-                                "Pazartesi": wp["Pazartesi"] || [], 
-                                "Salı": wp["Salı"] || wp[Object.keys(wp).find(k => k.includes("al"))] || [],
-                                "Çarşamba": wp["Çarşamba"] || wp[Object.keys(wp).find(k => k.includes("amba"))] || [], 
-                                "Perşembe": wp["Perşembe"] || wp[Object.keys(wp).find(k => k.includes("embe"))] || [],
-                                "Cuma": wp["Cuma"] || [], 
-                                "Cumartesi": wp["Cumartesi"] || [], 
-                                "Pazar": wp["Pazar"] || []
+                                "Pazartesi": wp["Pazartesi"] || [], "Salı": wp["Salı"] || wp[Object.keys(wp).find(k => k.includes("al"))] || [],
+                                "Çarşamba": wp["Çarşamba"] || wp[Object.keys(wp).find(k => k.includes("amba"))] || [], "Perşembe": wp["Perşembe"] || wp[Object.keys(wp).find(k => k.includes("embe"))] || [],
+                                "Cuma": wp["Cuma"] || [], "Cumartesi": wp["Cumartesi"] || [], "Pazar": wp["Pazar"] || []
                             });
                         }
                         alert("Veriler başarıyla yüklendi! 🚀");
                         event.target.value = ""; 
-                    } catch (error) { 
-                        alert("Hata: Yüklediğiniz dosya geçerli değil."); 
-                    }
+                    } catch (error) { alert("Hata: Yüklediğiniz dosya geçerli değil."); }
                 };
                 reader.readAsText(file);
             };
 
-            // --- DRAG & DROP FONKSİYONLARI ---
-            const handleDragStart = (e, day, index) => { 
-                dragItem.current = { day, index }; 
-                setTimeout(() => { e.target.style.opacity = '0.5'; }, 0); 
-            };
-            const handleDragEnter = (e, day, index) => { 
-                dragOverItem.current = { day, index }; 
-            };
-            const handleDragEnd = (e) => { 
-                e.target.style.opacity = '1'; 
-                dragItem.current = null; 
-                dragOverItem.current = null; 
-            };
+            const handleDragStart = (e, day, index) => { dragItem.current = { day, index }; setTimeout(() => { e.target.style.opacity = '0.5'; }, 0); };
+            const handleDragEnter = (e, day, index) => { dragOverItem.current = { day, index }; };
+            const handleDragEnd = (e) => { e.target.style.opacity = '1'; dragItem.current = null; dragOverItem.current = null; };
             const handleDrop = (e, targetDay) => {
                 e.preventDefault();
                 if (!dragItem.current) return;
-                const sourceDay = dragItem.current.day;
-                const sourceIndex = dragItem.current.index;
+                const sourceDay = dragItem.current.day; const sourceIndex = dragItem.current.index;
                 let destIndex = weeklyPlan[targetDay].length;
-                if (dragOverItem.current && dragOverItem.current.day === targetDay) { 
-                    destIndex = dragOverItem.current.index; 
-                }
+                if (dragOverItem.current && dragOverItem.current.day === targetDay) { destIndex = dragOverItem.current.index; }
                 if (sourceDay === targetDay && sourceIndex === destIndex) return;
                 const newPlan = { ...weeklyPlan };
                 const itemToMove = newPlan[sourceDay][sourceIndex];
@@ -207,99 +189,55 @@
                 setWeeklyPlan(newPlan);
             };
 
-            // --- KATEGORİ & GÖREV CRUD İŞLEMLERİ ---
             const handleAddCategory = (e) => {
-                e.preventDefault(); 
-                const trimmedName = newCategoryName.trim(); 
-                if (!trimmedName) return;
-                if (categories.find(c => c.name.toLowerCase() === trimmedName.toLowerCase())) { 
-                    alert("Bu kategori mevcut!"); 
-                    return; 
-                }
+                e.preventDefault(); const trimmedName = newCategoryName.trim(); if (!trimmedName) return;
+                if (categories.find(c => c.name.toLowerCase() === trimmedName.toLowerCase())) { alert("Bu kategori mevcut!"); return; }
                 const randomColor = pastelColors[Math.floor(Math.random() * pastelColors.length)];
                 setCategories([...categories, { name: trimmedName, color: randomColor.color, text: randomColor.text }]);
-                setNewCategoryName(""); 
-                setShowAddCategory(false);
+                setNewCategoryName(""); setShowAddCategory(false);
             };
 
             const handleAddTask = (e) => {
-                e.preventDefault(); 
-                if (!newTitle.trim()) return;
-                const newTask = { 
-                    id: "task_" + Date.now(), 
-                    title: newTitle, 
-                    category: newCategory || categories[0].name, 
-                    details: newDetails, 
-                    priority: newPriority, 
-                    status: newStatus, 
-                    isTotallyDone: false, 
-                    subTasks: [] 
-                };
+                e.preventDefault(); if (!newTitle.trim()) return;
+                // parentId: null eklendi
+                const newTask = { id: "task_" + Date.now(), title: newTitle, category: newCategory || categories[0].name, details: newDetails, priority: newPriority, status: newStatus, isTotallyDone: false, subTasks: [], parentId: null };
                 setTasks([newTask, ...tasks]);
-                setNewTitle(""); 
-                setNewDetails(""); 
-                setNewPriority("Orta"); 
-                setNewStatus("Not Started"); 
-                setShowAddForm(false);
+                setNewTitle(""); setNewDetails(""); setNewPriority("Orta"); setNewStatus("Not Started"); setShowAddForm(false);
             };
 
             const handleDeleteTask = (taskId) => {
                 if (window.confirm("Bu görevi silmek istediğinize emin misiniz?")) {
-                    setTasks(tasks.filter(t => t.id !== taskId));
+                    // Silerken, bu göreve bağlı olan çocukları da bağımsız hale getiriyoruz
+                    setTasks(tasks.filter(t => t.id !== taskId).map(t => t.parentId === taskId ? { ...t, parentId: null } : t));
                     if (selectedTaskId === taskId) setSelectedTaskId(null);
                     const updatedPlan = { ...weeklyPlan };
-                    Object.keys(updatedPlan).forEach(day => { 
-                        updatedPlan[day] = updatedPlan[day].filter(item => item.taskId !== taskId); 
-                    });
+                    Object.keys(updatedPlan).forEach(day => { updatedPlan[day] = updatedPlan[day].filter(item => item.taskId !== taskId); });
                     setWeeklyPlan(updatedPlan);
                 }
             };
 
-            const updateTaskStatus = (taskId, status) => { 
-                setTasks(tasks.map(t => t.id === taskId ? { ...t, status } : t)); 
-            };
-            const updateTaskPriority = (taskId, priority) => { 
-                setTasks(tasks.map(t => t.id === taskId ? { ...t, priority } : t)); 
-            };
-            const updateTaskTitle = (taskId, title) => { 
-                setTasks(tasks.map(t => t.id === taskId ? { ...t, title } : t)); 
-            };
-            const updateTaskDetails = (taskId, details) => { 
-                setTasks(tasks.map(t => t.id === taskId ? { ...t, details } : t)); 
-            };
-            const toggleTotallyDone = (taskId) => { 
-                setTasks(tasks.map(t => t.id === taskId ? { ...t, isTotallyDone: !t.isTotallyDone } : t)); 
-            };
+            const updateTaskStatus = (taskId, status) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, status } : t)); };
+            const updateTaskPriority = (taskId, priority) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, priority } : t)); };
+            const updateTaskTitle = (taskId, title) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, title } : t)); };
+            const updateTaskDetails = (taskId, details) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, details } : t)); };
+            const toggleTotallyDone = (taskId) => { setTasks(tasks.map(t => t.id === taskId ? { ...t, isTotallyDone: !t.isTotallyDone } : t)); };
 
-            // --- ALT GÖREV (SUBTASK) İŞLEMLERİ ---
-            const updateSubTaskTitle = (taskId, subTaskId, title) => { 
-                setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, title } : sub) } : task)); 
-            };
-            const toggleSubTask = (taskId, subTaskId) => { 
-                setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, isCompleted: !sub.isCompleted } : sub) } : task)); 
-            };
-            const addSubTask = (taskId, title) => { 
-                if (!title.trim()) return; 
-                setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: [...task.subTasks, { id: "sub_" + Date.now(), title, isCompleted: false }] } : task)); 
-            };
+            const updateSubTaskTitle = (taskId, subTaskId, title) => { setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, title } : sub) } : task)); };
+            const toggleSubTask = (taskId, subTaskId) => { setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.map(sub => sub.id === subTaskId ? { ...sub, isCompleted: !sub.isCompleted } : sub) } : task)); };
+            const addSubTask = (taskId, title) => { if (!title.trim()) return; setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: [...task.subTasks, { id: "sub_" + Date.now(), title, isCompleted: false }] } : task)); };
             const deleteSubTask = (taskId, subTaskId) => {
                 setTasks(tasks.map(task => task.id === taskId ? { ...task, subTasks: task.subTasks.filter(sub => sub.id !== subTaskId) } : task));
                 const updatedPlan = { ...weeklyPlan };
-                Object.keys(updatedPlan).forEach(day => { 
-                    updatedPlan[day] = updatedPlan[day].filter(item => item.subTaskId !== subTaskId); 
-                });
+                Object.keys(updatedPlan).forEach(day => { updatedPlan[day] = updatedPlan[day].filter(item => item.subTaskId !== subTaskId); });
                 setWeeklyPlan(updatedPlan);
             };
 
-            // --- ALIŞKANLIK (HABIT) İŞLEMLERİ ---
             const handleAddHabit = (e) => {
-                e.preventDefault(); 
-                if (!newHabitTitle.trim()) return;
+                e.preventDefault(); if (!newHabitTitle.trim()) return;
                 const newHabit = { id: "habit_" + Date.now(), title: newHabitTitle };
                 setHabits([...habits, newHabit]);
                 if (!selectedHabitId) setSelectedHabitId(newHabit.id);
-                setNewHabitTitle(""); 
-                setShowAddHabit(false);
+                setNewHabitTitle(""); setShowAddHabit(false);
             };
 
             const handleDeleteHabit = (habitId) => {
@@ -311,24 +249,15 @@
 
             const toggleHabitStatus = (habitId, dateStr) => {
                 setHabitLogs(prev => {
-                    const logs = prev[habitId] || {}; 
-                    const currentStatus = logs[dateStr];
-                    let nextStatus = "done"; 
-                    if (currentStatus === "done") nextStatus = "failed"; 
-                    else if (currentStatus === "failed") nextStatus = null;
+                    const logs = prev[habitId] || {}; const currentStatus = logs[dateStr];
+                    let nextStatus = "done"; if (currentStatus === "done") nextStatus = "failed"; else if (currentStatus === "failed") nextStatus = null;
                     const newLogs = { ...prev, [habitId]: { ...logs } };
-                    if (nextStatus) { 
-                        newLogs[habitId][dateStr] = nextStatus; 
-                    } else { 
-                        delete newLogs[habitId][dateStr]; 
-                    }
+                    if (nextStatus) { newLogs[habitId][dateStr] = nextStatus; } else { delete newLogs[habitId][dateStr]; }
                     return newLogs;
                 });
             };
 
-            const changeMonth = (offset) => { 
-                setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1)); 
-            };
+            const changeMonth = (offset) => { setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1)); };
 
             const clearDayPlan = (day) => {
                 if (window.confirm(`${day} gününün programını tamamen silmek istediğinize emin misiniz?`)) {
@@ -336,42 +265,20 @@
                 }
             };
 
-            // YENİ: Arama Çubuğu kapanışta sıfırlanıyor
-            const closePlanningModal = () => {
-                setPlanningDay(null);
-                setPlanningSearchQuery("");
-                setStartTime(""); 
-                setEndTime(""); 
-            };
+            const closePlanningModal = () => { setPlanningDay(null); setPlanningSearchQuery(""); setStartTime(""); setEndTime(""); };
 
-            // --- SAAT SEÇİCİ İLE HAFTALIK PLANA EKLEME ---
             const addToWeeklyPlan = (day, taskId, subTaskId = null) => {
                 let formattedTime = "";
-                if (startTime && endTime) {
-                    formattedTime = `${startTime} - ${endTime}`;
-                } else if (startTime) {
-                    formattedTime = startTime;
-                }
+                if (startTime && endTime) formattedTime = `${startTime} - ${endTime}`;
+                else if (startTime) formattedTime = startTime;
                 
-                const newItem = { 
-                    id: "wp_" + Date.now(), 
-                    taskId, 
-                    subTaskId, 
-                    status: "Not Started",
-                    time: formattedTime 
-                };
+                const newItem = { id: "wp_" + Date.now(), taskId, subTaskId, status: "Not Started", time: formattedTime };
                 setWeeklyPlan({ ...weeklyPlan, [day]: [...weeklyPlan[day], newItem] });
-                
-                // Kapandığında stateleri sıfırla
                 closePlanningModal();
             };
 
-            const updateWeeklyItemStatus = (day, itemId, status) => { 
-                setWeeklyPlan({ ...weeklyPlan, [day]: weeklyPlan[day].map(item => item.id === itemId ? { ...item, status } : item) }); 
-            };
-            const removeFromWeeklyPlan = (day, itemId) => { 
-                setWeeklyPlan({ ...weeklyPlan, [day]: weeklyPlan[day].filter(item => item.id !== itemId) }); 
-            };
+            const updateWeeklyItemStatus = (day, itemId, status) => { setWeeklyPlan({ ...weeklyPlan, [day]: weeklyPlan[day].map(item => item.id === itemId ? { ...item, status } : item) }); };
+            const removeFromWeeklyPlan = (day, itemId) => { setWeeklyPlan({ ...weeklyPlan, [day]: weeklyPlan[day].filter(item => item.id !== itemId) }); };
 
             const currentSelectedTask = tasks.find(t => t.id === selectedTaskId);
             const activeHabit = habits.find(h => h.id === selectedHabitId);
@@ -384,29 +291,52 @@
             const blankDays = Array.from({ length: firstDayIndex });
             const monthDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-            // GÜNCELLENMİŞ: Modal (Görev Ekleme) için Arama Filtresi Mantığı
+            // ARAMA FİLTRESİ
             const filteredPlanningTasks = tasks.filter(t => {
-                if (t.isTotallyDone) return false; // Zaten bitmişleri gösterme
-                if (!planningSearchQuery) return true; // Arama boşsa hepsini göster
+                if (t.isTotallyDone) return false; 
+                if (!planningSearchQuery) return true; 
                 
-                // Türkçe karakterlere duyarlı küçük harfe çevirme
                 const query = planningSearchQuery.toLocaleLowerCase('tr-TR');
                 const matchTitle = t.title.toLocaleLowerCase('tr-TR').includes(query);
-                
-                // Alt adımların isimlerini de tarama yeteneği (Smart Search)
                 const matchSub = t.subTasks.some(sub => !sub.isCompleted && sub.title.toLocaleLowerCase('tr-TR').includes(query));
                 
                 return matchTitle || matchSub;
             });
 
+            // =========================================================
+            // GİRİŞ EKRANI (AUTH)
+            // =========================================================
+            if (!currentUser) {
+                return (
+                    <div className="flex h-screen items-center justify-center bg-slate-50 transition-colors duration-300">
+                        <form onSubmit={handleAuth} className="bg-white p-8 rounded-2xl shadow-xl w-96 border border-slate-200">
+                            <div className="flex justify-center mb-4 text-4xl">🏆</div>
+                            <h2 className="text-2xl font-extrabold text-center mb-6 text-slate-800">{authMode === 'login' ? 'Giriş Yap' : 'Üye Ol'}</h2>
+                            {authMode === "register" && (
+                                <input type="text" placeholder="Ad Soyad" required value={authForm.name} onChange={e => setAuthForm({...authForm, name: e.target.value})} className="w-full mb-4 px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 outline-none bg-slate-50" />
+                            )}
+                            <input type="email" placeholder="E-Posta" required value={authForm.email} onChange={e => setAuthForm({...authForm, email: e.target.value})} className="w-full mb-4 px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 outline-none bg-slate-50" />
+                            <input type="password" placeholder="Şifre" required value={authForm.password} onChange={e => setAuthForm({...authForm, password: e.target.value})} className="w-full mb-6 px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 outline-none bg-slate-50" />
+                            <button type="submit" className="w-full bg-slate-800 text-white font-bold py-3 rounded-xl hover:bg-indigo-600 transition-all shadow-md">{authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}</button>
+                            <p className="text-center text-sm text-slate-500 mt-4 cursor-pointer hover:text-indigo-600 font-semibold" onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}>
+                                {authMode === 'login' ? 'Hesabın yok mu? Üye Ol' : 'Zaten üye misin? Giriş Yap'}
+                            </p>
+                        </form>
+                    </div>
+                );
+            }
+
+            // =========================================================
+            // ASIL UYGULAMA (GİRİŞ YAPILDIKTAN SONRA)
+            // =========================================================
             return (
-                <div className={`flex flex-col md:flex-row h-screen overflow-hidden select-none bg-[#fbfbfa] ${isDark ? 'dark' : ''}`}>
+                <div className="flex flex-col md:flex-row h-screen overflow-hidden select-none bg-slate-50 transition-colors duration-300">
                     
                     {/* SOL SIDEBAR */}
-                    <div className="w-full md:w-64 bg-white md:border-r border-b border-slate-200 flex flex-col justify-between p-4 shrink-0 z-10 shadow-sm">
+                    <div className="w-full md:w-64 bg-white md:border-r border-b border-slate-200 flex flex-col justify-between p-4 shrink-0 z-10 shadow-sm transition-colors duration-300">
                         <div>
                             <div className="hidden md:flex items-center space-x-3 px-3 py-4 mb-6 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 shadow-sm">
-                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center text-sm font-bold shadow-md">🚀</div>
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center text-sm font-bold shadow-md">🏆</div>
                                 <span className="font-bold text-sm text-slate-800">Premium Alanım</span>
                             </div>
                             
@@ -425,6 +355,13 @@
                                 </button>
                             </nav>
                         </div>
+                        {/* Çıkış Yap Butonu */}
+                        <div className="hidden md:block mt-auto">
+                            <div className="mb-4 px-2 text-xs font-bold text-slate-400">👤 {currentUser.name || currentUser.email}</div>
+                            <button onClick={handleLogout} className="btn-press w-full flex items-center space-x-3 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 rounded-xl transition-all">
+                                <span className="text-lg">🚪</span> <span>Çıkış Yap</span>
+                            </button>
+                        </div>
                     </div>
 
                     {/* ANA EKRAN İÇERİK ALANI */}
@@ -440,7 +377,7 @@
                                     </button>
                                 </div>
 
-                                <div className="flex flex-wrap items-center gap-2 mb-6 bg-white p-2 rounded-xl shadow-sm border border-slate-100">
+                                <div className="flex flex-wrap items-center gap-2 mb-6 bg-white p-2 rounded-xl shadow-sm border border-slate-100 transition-colors duration-300">
                                     <button onClick={() => setFilterCategory("Hepsi")} className={`btn-press px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filterCategory === "Hepsi" ? "bg-slate-800 text-white shadow-md" : "text-slate-600 hover:bg-slate-100"}`}>Hepsi</button>
                                     
                                     {categories.map(cat => (
@@ -451,7 +388,7 @@
 
                                     {showAddCategory ? (
                                         <form onSubmit={handleAddCategory} className="flex items-center space-x-2 ml-0 md:ml-2 mt-2 md:mt-0 animate-modal">
-                                            <input type="text" autoFocus value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="Kategori Adı..." className="border border-slate-300 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 w-32 bg-white text-slate-800" />
+                                            <input type="text" autoFocus value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="Kategori Adı..." className="border border-slate-300 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 w-32 bg-transparent" />
                                             <button type="submit" className="btn-press text-xs bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold shadow-sm">Ekle</button>
                                             <button type="button" onClick={() => setShowAddCategory(false)} className="btn-press text-xs text-slate-400 hover:text-slate-600 font-bold px-1">✕</button>
                                         </form>
@@ -463,28 +400,28 @@
                                 </div>
 
                                 {showAddForm && (
-                                    <form onSubmit={handleAddTask} className="bg-white border border-slate-200 rounded-2xl p-6 mb-8 shadow-xl shadow-slate-200/50 space-y-5 animate-modal">
+                                    <form onSubmit={handleAddTask} className="bg-white border border-slate-200 rounded-2xl p-6 mb-8 shadow-xl shadow-slate-200/50 space-y-5 animate-modal transition-colors duration-300">
                                         <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                                             <div className="md:col-span-2">
                                                 <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Görev Adı</label>
-                                                <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-slate-800" required />
+                                                <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" required />
                                             </div>
                                             <div>
                                                 <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Kategori</label>
-                                                <select value={newCategory} onChange={e => setNewCategory(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-slate-800">
+                                                <select value={newCategory} onChange={e => setNewCategory(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all">
                                                     {categories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
                                                 </select>
                                             </div>
                                             <div>
                                                 <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Öncelik</label>
-                                                <select value={newPriority} onChange={e => setNewPriority(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-slate-800">
+                                                <select value={newPriority} onChange={e => setNewPriority(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all">
                                                     {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
                                                 </select>
                                             </div>
                                         </div>
                                         <div>
                                             <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Açıklama (İsteğe Bağlı)</label>
-                                            <textarea value={newDetails} onChange={e => setNewDetails(e.target.value)} rows="2" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 resize-none transition-all text-slate-800"></textarea>
+                                            <textarea value={newDetails} onChange={e => setNewDetails(e.target.value)} rows="2" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 resize-none transition-all"></textarea>
                                         </div>
                                         <div className="flex justify-end space-x-3 pt-2">
                                             <button type="button" onClick={() => setShowAddForm(false)} className="btn-press px-5 py-2.5 text-slate-500 font-bold text-sm rounded-xl hover:bg-slate-100 transition-all">İptal Et</button>
@@ -494,24 +431,38 @@
                                 )}
 
                                 <div className="space-y-3">
-                                    {tasks.filter(t => filterCategory === "Hepsi" || t.category === filterCategory).map(task => {
+                                    {/* Sadece bir gruba bağlı olmayan ana görevleri (parentId: null) listeler */}
+                                    {tasks.filter(t => (filterCategory === "Hepsi" || t.category === filterCategory) && !t.parentId).map(task => {
                                         const catConfig = categories.find(c => c.name === task.category) || { color: "#e2e8f0", text: "#0f172a" };
                                         const taskStatus = task.status || "Not Started";
                                         const taskPriority = task.priority || "Orta";
                                         const pStyle = priorityStyles[taskPriority];
                                         const isDone = task.isTotallyDone || false;
 
+                                        // Bu ana görevin içine atılmış alt grup görevleri bul (Dune -> Dune Çocukları gibi)
+                                        const childTasks = tasks.filter(child => child.parentId === task.id);
+
                                         return (
                                             <div 
                                                 key={task.id} onClick={() => setSelectedTaskId(task.id)} 
                                                 style={{ borderLeftColor: pStyle.text }}
-                                                className={`task-card-anim group flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-white border-y border-r border-l-4 ${isDone ? 'border-green-400 bg-green-50/50 opacity-75' : 'border-slate-200'} rounded-2xl shadow-sm cursor-pointer gap-3 md:gap-0`}
+                                                className={`task-card-anim group flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-white border-y border-r border-l-4 ${isDone ? 'border-green-400 bg-green-50/50 opacity-75' : 'border-slate-200'} rounded-2xl shadow-sm cursor-pointer gap-3 md:gap-0 transition-colors duration-300`}
                                             >
-                                                <div className="flex items-center space-x-4 w-full md:w-auto truncate flex-1">
-                                                    <input type="checkbox" checked={isDone} onClick={(e) => e.stopPropagation()} onChange={(e) => { e.stopPropagation(); toggleTotallyDone(task.id); }} className="master-checkbox shrink-0 shadow-sm" title="Görevi Tamamen Bitir" />
-                                                    <span style={{ backgroundColor: catConfig.color, color: catConfig.text }} className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold tracking-wide shrink-0 transition-opacity ${isDone ? 'opacity-60' : ''}`}>{task.category}</span>
-                                                    <span className={`font-semibold text-[15px] truncate transition-all ${isDone ? 'line-through text-slate-400' : 'text-slate-800 group-hover:text-indigo-600'}`}>{task.title}</span>
+                                                <div className="flex flex-col flex-1 w-full truncate">
+                                                    <div className="flex items-center space-x-4 w-full truncate">
+                                                        <input type="checkbox" checked={isDone} onClick={(e) => e.stopPropagation()} onChange={(e) => { e.stopPropagation(); toggleTotallyDone(task.id); }} className="master-checkbox shrink-0 shadow-sm" title="Görevi Tamamen Bitir" />
+                                                        <span style={{ backgroundColor: catConfig.color, color: catConfig.text }} className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold tracking-wide shrink-0 transition-opacity ${isDone ? 'opacity-60' : ''}`}>{task.category}</span>
+                                                        <span className={`font-semibold text-[15px] truncate transition-all ${isDone ? 'line-through text-slate-400' : 'text-slate-800 group-hover:text-indigo-600'}`}>{task.title}</span>
+                                                    </div>
+                                                    
+                                                    {/* Eğer bu görevin içine atılmış grup elemanları varsa göster */}
+                                                    {childTasks.length > 0 && !isDone && (
+                                                        <div className="ml-12 mt-2 flex items-center space-x-2 text-xs font-semibold text-slate-500">
+                                                            <span>📁 {childTasks.length} Bağlı Görev</span>
+                                                        </div>
+                                                    )}
                                                 </div>
+
                                                 <div className="flex items-center space-x-3 md:space-x-4 shrink-0 w-full md:w-auto justify-between md:justify-end pl-10 md:pl-0">
                                                     {!isDone && (
                                                         <div className="flex items-center space-x-2">
@@ -521,7 +472,7 @@
                                                             <span style={{ backgroundColor: pStyle.bg, color: pStyle.text, borderColor: pStyle.border }} className="text-[11px] font-extrabold border px-2 py-1 rounded-md shadow-sm">{taskPriority}</span>
                                                         </div>
                                                     )}
-                                                    {isDone && <span className="text-xs font-extrabold text-green-600 bg-green-100 px-3 py-1 rounded-full animate-modal shadow-sm">TAMAMLANDI 🏆</span>}
+                                                    {isDone && <span className="text-xs font-extrabold text-green-600 bg-green-100 px-3 py-1 rounded-full animate-modal shadow-sm">TAMAMLANDI 🎉</span>}
                                                     <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }} className="btn-press md:opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg text-xs font-bold transition-all">Sil</button>
                                                 </div>
                                             </div>
@@ -531,9 +482,9 @@
                             </div>
                         )}
 
-                        {/* 2. HAFTALIK PROGRAM KANBAN EKRANI */}
+                        {/* 2. HAFTALIK PROGRAM BOARD EKRANI */}
                         {activeView === "weekly" && (
-                            <div className="flex-1 overflow-x-auto overflow-y-auto p-4 md:p-8 animate-modal bg-slate-50">
+                            <div className="flex-1 overflow-x-auto overflow-y-auto p-4 md:p-8 animate-modal bg-[#f4f7f9] transition-colors duration-300">
                                 <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-800 mb-6 max-w-[1400px] mx-auto text-gradient">Haftalık Program</h1>
                                 
                                 <div className="grid grid-cols-1 lg:grid-cols-7 gap-5 max-w-[1400px] mx-auto">
@@ -544,7 +495,7 @@
                                             onDrop={(e) => handleDrop(e, day)}
                                             className="bg-slate-100/50 rounded-2xl p-2 border border-slate-200 shadow-sm flex flex-col h-auto min-h-[250px] lg:h-[calc(100vh-160px)] transition-all hover:bg-slate-100"
                                         >
-                                            <div className="flex justify-between items-center mb-3 p-3 bg-white rounded-xl shadow-sm border border-slate-100">
+                                            <div className="flex justify-between items-center mb-3 p-3 bg-white rounded-xl shadow-sm border border-slate-100 transition-colors duration-300">
                                                 <span className="font-extrabold text-sm text-slate-800 uppercase tracking-wide">{day}</span>
                                                 <button onClick={() => clearDayPlan(day)} className="btn-press text-slate-300 hover:text-red-500 hover:bg-red-50 rounded p-1.5 transition-colors" title={`${day} Temizle`}>
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -566,7 +517,7 @@
                                                         <div 
                                                             key={item.id} onClick={() => setSelectedTaskId(parentTask.id)} draggable onDragStart={(e) => handleDragStart(e, day, index)} onDragEnter={(e) => handleDragEnter(e, day, index)} onDragEnd={handleDragEnd} onDragOver={(e) => e.preventDefault()}
                                                             style={{ borderTopColor: pStyle.text }}
-                                                            className={`task-card-anim draggable-card bg-white border border-slate-200 border-t-4 rounded-xl p-3 shadow-sm group relative flex flex-col ${isTotallyDone ? 'opacity-50 grayscale bg-slate-50' : ''}`}
+                                                            className={`task-card-anim draggable-card bg-white border border-slate-200 border-t-4 rounded-xl p-3 shadow-sm group relative flex flex-col transition-colors duration-300 ${isTotallyDone ? 'opacity-50 grayscale bg-slate-50' : ''}`}
                                                         >
                                                             <button onClick={(e) => { e.stopPropagation(); removeFromWeeklyPlan(day, item.id); }} className="btn-press absolute top-2 right-2 md:opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 bg-red-50 rounded-md w-6 h-6 flex items-center justify-center transition-all">✕</button>
                                                             
@@ -618,12 +569,12 @@
 
                         {/* 3. ALIŞKANLIKLAR EKRANI */}
                         {activeView === "habits" && (
-                            <div className="flex-1 flex flex-col md:flex-row overflow-hidden animate-modal bg-slate-50">
-                                <div className="w-full md:w-72 bg-white border-b md:border-b-0 md:border-r border-slate-200 p-4 md:p-6 overflow-y-auto shrink-0 shadow-sm">
+                            <div className="flex-1 flex flex-col md:flex-row overflow-hidden animate-modal bg-slate-50 transition-colors duration-300">
+                                <div className="w-full md:w-72 bg-white border-b md:border-b-0 md:border-r border-slate-200 p-4 md:p-6 overflow-y-auto shrink-0 shadow-sm transition-colors duration-300">
                                     <h2 className="text-xl font-extrabold text-slate-800 mb-6 text-gradient">Alışkanlıklarım</h2>
                                     {showAddHabit ? (
-                                        <form onSubmit={handleAddHabit} className="mb-6 animate-modal bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                            <input type="text" autoFocus value={newHabitTitle} onChange={e => setNewHabitTitle(e.target.value)} placeholder="Örn: 30 Dk Kitap Oku" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/50 mb-3 text-slate-800" />
+                                        <form onSubmit={handleAddHabit} className="mb-6 animate-modal bg-slate-50 p-4 rounded-xl border border-slate-100 transition-colors duration-300">
+                                            <input type="text" autoFocus value={newHabitTitle} onChange={e => setNewHabitTitle(e.target.value)} placeholder="Örn: 30 Dk Kitap Oku" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/50 mb-3" />
                                             <div className="flex space-x-2">
                                                 <button type="submit" className="btn-press flex-1 bg-slate-800 text-white font-bold text-xs py-2 rounded-lg shadow-md">Oluştur</button>
                                                 <button type="button" onClick={() => setShowAddHabit(false)} className="btn-press px-4 bg-slate-200 text-slate-700 font-bold text-xs py-2 rounded-lg">İptal</button>
@@ -643,26 +594,26 @@
                                         ))}
                                     </div>
                                 </div>
-                                <div className="flex-1 bg-slate-50 p-4 md:p-10 overflow-y-auto">
+                                <div className="flex-1 bg-slate-50 p-4 md:p-10 overflow-y-auto transition-colors duration-300">
                                     {activeHabit && (
                                         <div className="max-w-4xl mx-auto">
-                                            <div className="flex flex-col md:flex-row justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                                            <div className="flex flex-col md:flex-row justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 transition-colors duration-300">
                                                 <div className="text-center md:text-left mb-4 md:mb-0">
                                                     <h1 className="text-2xl md:text-3xl font-extrabold text-slate-800">{activeHabit.title}</h1>
                                                     <p className="text-sm text-slate-500 mt-1 font-medium">Günlerin üzerine tıklayarak işaretle.</p>
                                                 </div>
-                                                <div className="flex items-center space-x-2 bg-slate-100 p-1.5 rounded-xl shadow-inner">
-                                                    <button onClick={() => changeMonth(-1)} className="btn-press bg-white px-4 py-2 rounded-lg text-slate-700 font-extrabold shadow-sm hover:text-indigo-600">&lt;</button>
+                                                <div className="flex items-center space-x-2 bg-slate-100 p-1.5 rounded-xl shadow-inner transition-colors duration-300">
+                                                    <button onClick={() => changeMonth(-1)} className="btn-press bg-white px-4 py-2 rounded-lg text-slate-700 font-extrabold shadow-sm hover:text-indigo-600 transition-colors duration-300">&lt;</button>
                                                     <span className="text-sm font-extrabold text-slate-800 w-32 text-center uppercase tracking-wide">{MONTH_NAMES[month]} {year}</span>
-                                                    <button onClick={() => changeMonth(1)} className="btn-press bg-white px-4 py-2 rounded-lg text-slate-700 font-extrabold shadow-sm hover:text-indigo-600">&gt;</button>
+                                                    <button onClick={() => changeMonth(1)} className="btn-press bg-white px-4 py-2 rounded-lg text-slate-700 font-extrabold shadow-sm hover:text-indigo-600 transition-colors duration-300">&gt;</button>
                                                 </div>
                                             </div>
-                                            <div className="bg-white border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/50 overflow-hidden">
-                                                <div className="grid grid-cols-7 bg-slate-50 border-b border-slate-200">
+                                            <div className="bg-white border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/50 overflow-hidden transition-colors duration-300">
+                                                <div className="grid grid-cols-7 bg-slate-50 border-b border-slate-200 transition-colors duration-300">
                                                     {DAYS_OF_WEEK.map(day => ( <div key={day} className="py-4 text-center text-xs font-extrabold text-slate-500 uppercase tracking-widest">{day.slice(0,3)}</div> ))}
                                                 </div>
-                                                <div className="grid grid-cols-7 gap-px bg-slate-100">
-                                                    {blankDays.map((_, i) => ( <div key={`blank-${i}`} className="bg-white min-h-[80px] md:min-h-[120px]"></div> ))}
+                                                <div className="grid grid-cols-7 gap-px bg-slate-100 transition-colors duration-300">
+                                                    {blankDays.map((_, i) => ( <div key={`blank-${i}`} className="bg-white min-h-[80px] md:min-h-[120px] transition-colors duration-300"></div> ))}
                                                     {monthDays.map(d => {
                                                         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                                                         const status = habitLogs[activeHabit.id]?.[dateStr];
@@ -686,28 +637,29 @@
                             </div>
                         )}
 
-                        {/* 4. AYARLAR EKRANI */}
+                        {/* 4. AYARLAR EKRANI VE KARANLIK MOD TOGGLE */}
                         {activeView === "settings" && (
                             <div className="flex-1 overflow-y-auto p-4 md:p-10 max-w-4xl w-full mx-auto animate-modal">
                                 <h1 className="text-3xl font-extrabold tracking-tight text-slate-800 mb-3 text-gradient">⚙️ Ayarlar & Veri</h1>
-                                <p className="text-sm font-medium text-slate-500 mb-10">Verilerin cihazında güvende. Aktarmak için aşağıdaki modern araçları kullan.</p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    
+                                <p className="text-sm font-medium text-slate-500 mb-10">Tüm sistem ayarlarını ve verilerini buradan yönetebilirsin.</p>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                                     {/* TEMA SEÇİM KARTI */}
-                                    <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-xl shadow-slate-200/50 flex flex-col items-center text-center transition-colors">
-                                        <h3 className="font-extrabold text-lg text-slate-800 mb-3">Görünüm Teması</h3>
-                                        <p className="text-sm font-medium text-slate-500 mb-8 flex-1">Aydınlık veya karanlık tema arasında geçiş yap.</p>
+                                    <div className="bg-white border border-slate-200 p-6 rounded-3xl shadow-xl shadow-slate-200/50 flex flex-col items-center text-center transition-colors duration-300">
+                                        <h3 className="font-extrabold text-lg text-slate-800 mb-2">Görünüm Teması</h3>
+                                        <p className="text-xs font-medium text-slate-500 mb-6 flex-1">Aydınlık veya karanlık tema seç.</p>
                                         
+                                        {/* TEMA BUTONU (Sıfırdan Özel Tasarım) */}
                                         <div 
                                             onClick={() => setIsDark(!isDark)}
                                             className={`relative w-[88px] h-[44px] rounded-full flex items-center p-1 cursor-pointer transition-colors duration-300 ${isDark ? 'bg-[#1a1a1a]' : 'bg-white shadow-sm border border-slate-200'}`}
                                         >
-                                            <div className="w-full flex justify-between px-1.5">
+                                            <div className="w-full flex justify-between px-1.5 z-0">
                                                 <svg className={`w-6 h-6 transition-colors ${isDark ? 'text-slate-400' : 'text-transparent'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                                                 <svg className={`w-5 h-5 transition-colors ${isDark ? 'text-transparent' : 'text-slate-400'}`} fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
                                             </div>
                                             
-                                            <div className={`absolute left-1 w-9 h-9 bg-[#0b57d0] rounded-full transition-transform duration-300 flex items-center justify-center ${isDark ? 'translate-x-[44px]' : 'translate-x-0'}`}>
+                                            <div className={`absolute left-1 w-9 h-9 bg-[#0b57d0] rounded-full transition-transform duration-300 flex items-center justify-center z-10 ${isDark ? 'translate-x-[44px]' : 'translate-x-0'}`}>
                                                 {isDark ? (
                                                     <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
                                                 ) : (
@@ -717,24 +669,27 @@
                                         </div>
                                     </div>
 
-                                    <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-xl shadow-slate-200/50 flex flex-col items-center text-center hover:border-blue-300 transition-colors">
-                                        <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600 rounded-2xl flex items-center justify-center text-4xl mb-6 shadow-sm">📥</div>
-                                        <h3 className="font-extrabold text-lg text-slate-800 mb-3">Yedeği İndir</h3>
-                                        <p className="text-sm font-medium text-slate-500 mb-8 flex-1">Tüm JSON verini cihazına kaydet.</p>
-                                        <button onClick={exportData} className="btn-press w-full bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-slate-700 transition-all">Verilerimi İndir</button>
+                                    {/* DIŞA AKTAR KARTI */}
+                                    <div className="bg-white border border-slate-200 p-6 rounded-3xl shadow-xl shadow-slate-200/50 flex flex-col items-center text-center hover:border-blue-300 transition-colors">
+                                        <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-sm">📥</div>
+                                        <h3 className="font-extrabold text-lg text-slate-800 mb-2">Yedeği İndir</h3>
+                                        <p className="text-xs font-medium text-slate-500 mb-6 flex-1">Tüm JSON verini cihazına kaydet.</p>
+                                        <button onClick={exportData} className="btn-press w-full bg-slate-800 text-white font-bold py-3 rounded-xl shadow-md hover:bg-slate-700 transition-all">Verilerimi İndir</button>
                                     </div>
-                                    <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-xl shadow-slate-200/50 flex flex-col items-center text-center hover:border-emerald-300 transition-colors">
-                                        <div className="w-20 h-20 bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600 rounded-2xl flex items-center justify-center text-4xl mb-6 shadow-sm">📤</div>
-                                        <h3 className="font-extrabold text-lg text-slate-800 mb-3">Yedek Yükle</h3>
-                                        <p className="text-sm font-medium text-slate-500 mb-8 flex-1">Önceki .json dosyanı seç ve çalışma alanını canlandır.</p>
+
+                                    {/* İÇE AKTAR KARTI */}
+                                    <div className="bg-white border border-slate-200 p-6 rounded-3xl shadow-xl shadow-slate-200/50 flex flex-col items-center text-center hover:border-emerald-300 transition-colors">
+                                        <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-sm">📤</div>
+                                        <h3 className="font-extrabold text-lg text-slate-800 mb-2">Yedek Yükle</h3>
+                                        <p className="text-xs font-medium text-slate-500 mb-6 flex-1">Önceki .json dosyanı seç ve geri yükle.</p>
                                         <input type="file" accept=".json" ref={fileInputRef} onChange={importData} className="hidden" />
-                                        <button onClick={() => fileInputRef.current.click()} className="btn-press w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-emerald-700 transition-all">Dosya Seç</button>
+                                        <button onClick={() => fileInputRef.current.click()} className="btn-press w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-emerald-700 transition-all">Dosya Seç</button>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* SAĞDAN KAYAN DETAY PANELİ (SIDE PEEK) */}
+                        {/* SAĞDAN KAYAN DETAY PANELİ VE GRUPLAMA SEÇENEĞİ */}
                         <div className={`fixed top-0 right-0 h-full w-full md:w-[450px] bg-white/95 backdrop-blur-md border-l border-slate-200 shadow-[20px_0_60px_-15px_rgba(0,0,0,0.3)] transform transition-transform duration-400 ease-out z-50 flex flex-col ${currentSelectedTask && activeView !== "habits" && activeView !== "settings" ? 'translate-x-0' : 'translate-x-full'}`}>
                             {currentSelectedTask && (
                                 <div className="flex-1 flex flex-col overflow-hidden p-6 md:p-8">
@@ -750,6 +705,21 @@
                                         <button onClick={() => setSelectedTaskId(null)} className="btn-press bg-slate-100 rounded-full w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-200 transition-colors">✕</button>
                                     </div>
 
+                                    {/* GRUPLAMA (KLASÖRLEME) ALANI */}
+                                    <div className="mb-4">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Bu Görevi Bir Gruba Bağla (Birleştir)</label>
+                                        <select 
+                                            value={currentSelectedTask.parentId || ""} 
+                                            onChange={(e) => setTasks(tasks.map(t => t.id === currentSelectedTask.id ? { ...t, parentId: e.target.value || null } : t))}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-400 transition-colors"
+                                        >
+                                            <option value="">Bağımsız Görev (Grup Yok)</option>
+                                            {tasks.filter(t => t.id !== currentSelectedTask.id && !t.parentId).map(t => (
+                                                <option key={t.id} value={t.id}>📁 {t.title} Grubu</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
                                     <div className="flex items-center space-x-4 mb-6 bg-gradient-to-r from-emerald-50 to-emerald-100/50 p-4 rounded-xl border border-emerald-200 shadow-sm transition-all">
                                         <input type="checkbox" checked={currentSelectedTask.isTotallyDone || false} onChange={() => toggleTotallyDone(currentSelectedTask.id)} className="master-checkbox shrink-0" />
                                         <span className="text-sm font-extrabold text-emerald-800">Görevi Tamamen Bitir</span>
@@ -760,7 +730,7 @@
                                     <textarea value={currentSelectedTask.details} onChange={(e) => updateTaskDetails(currentSelectedTask.id, e.target.value)} placeholder="Detaylar, notlar veya linkler ekle..." className="w-full text-sm font-medium text-slate-600 bg-slate-50 p-4 rounded-xl mb-8 border border-slate-200 hover:border-slate-300 focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 outline-none transition-all resize-none min-h-[120px]" />
                                     
                                     <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400 mb-3">Alt Adımlar</h3>
-                                    <input type="text" placeholder="+ Yeni adım ekle (Enter)" onKeyDown={(e) => { if (e.key === 'Enter') { addSubTask(currentSelectedTask.id, e.target.value); e.target.value = ""; } }} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium mb-4 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 shadow-sm transition-all text-slate-800" />
+                                    <input type="text" placeholder="+ Yeni adım ekle (Enter)" onKeyDown={(e) => { if (e.key === 'Enter') { addSubTask(currentSelectedTask.id, e.target.value); e.target.value = ""; } }} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium mb-4 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 shadow-sm transition-all" />
                                     
                                     <div className="flex-1 overflow-y-auto space-y-2 pr-2 scrollbar-hide pb-10">
                                         {currentSelectedTask.subTasks.map(sub => (
@@ -780,14 +750,13 @@
                         {/* PLANLAMA MODALİ VE AKILLI ARAMA ÇUBUĞU */}
                         {planningDay && (
                             <div className="glass-overlay fixed inset-0 flex items-end md:items-center justify-center z-50">
-                                <div className="animate-modal bg-white rounded-t-3xl md:rounded-2xl p-6 md:p-8 w-full md:w-[500px] h-[85vh] md:max-h-[85vh] flex flex-col shadow-2xl border border-slate-100">
+                                <div className="animate-modal bg-white rounded-t-3xl md:rounded-2xl p-6 md:p-8 w-full md:w-[500px] h-[85vh] md:max-h-[85vh] flex flex-col shadow-2xl border border-slate-100 transition-colors duration-300">
                                     <div className="flex justify-between items-center mb-5 pb-4 border-b border-slate-100">
                                         <h3 className="font-extrabold text-xl text-slate-800 text-gradient">{planningDay} Planı</h3>
                                         <button onClick={closePlanningModal} className="btn-press bg-slate-100 rounded-full w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-900 transition-colors">✕</button>
                                     </div>
                                     
-                                    {/* ZAMAN SEÇİCİLER (Başlangıç ve Bitiş) */}
-                                    <div className="mb-5 bg-indigo-50/50 border border-indigo-100 p-4 rounded-2xl shadow-sm shrink-0">
+                                    <div className="mb-5 bg-indigo-50/50 border border-indigo-100 p-4 rounded-2xl shadow-sm shrink-0 transition-colors duration-300">
                                         <label className="block text-[11px] font-extrabold text-indigo-800 uppercase tracking-widest mb-3">🕒 Zaman Aralığı (Opsiyonel)</label>
                                         <div className="flex items-center space-x-4">
                                             <div className="flex-1">
@@ -802,7 +771,6 @@
                                         </div>
                                     </div>
 
-                                    {/* AKILLI ARAMA ÇUBUĞU (Smart Search) */}
                                     <div className="mb-4 relative shrink-0">
                                         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                                             <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -816,29 +784,44 @@
                                         />
                                     </div>
 
-                                    {/* FİLTRELENMİŞ GÖREV LİSTESİ */}
                                     <div className="flex-1 overflow-y-auto space-y-4 pb-10 pr-2 scrollbar-hide">
                                         {filteredPlanningTasks.length === 0 ? (
                                             <p className="text-sm font-medium text-center py-10 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">Aradığın kriterde aktif görev yok.</p>
                                         ) : (
-                                            filteredPlanningTasks.map(task => (
-                                                <div key={task.id} className="border border-slate-200 p-4 bg-white rounded-2xl hover:border-indigo-300 hover:shadow-md transition-all">
-                                                    <div className="flex justify-between items-center mb-3">
-                                                        <span className="text-sm font-extrabold text-slate-800 truncate pr-3 flex-1">{task.title}</span>
-                                                        <button onClick={() => addToWeeklyPlan(planningDay, task.id)} className="btn-press shrink-0 bg-slate-800 text-white text-[11px] font-bold px-4 py-2 rounded-xl shadow-md hover:bg-indigo-600 transition-colors">Ana Görev</button>
-                                                    </div>
-                                                    {task.subTasks.length > 0 && (
-                                                        <div className="pl-4 border-l-2 border-slate-100 space-y-2 mt-3 pt-2">
-                                                            {task.subTasks.filter(sub => !sub.isCompleted).map(sub => (
-    <div key={sub.id} className="flex justify-between text-xs font-semibold text-slate-600 items-center bg-slate-50 p-2 rounded-lg border border-slate-100 hover:border-indigo-200 transition-colors">
-                                                                    <span className="truncate pr-2">{sub.title}</span>
-                                                                    <button onClick={() => addToWeeklyPlan(planningDay, task.id, sub.id)} className="btn-press shrink-0 text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md hover:bg-indigo-100 transition-colors font-bold">Adım Ekle</button>
-                                                                </div>
-                                                            ))}
+                                            filteredPlanningTasks.map(task => {
+                                                const query = planningSearchQuery.toLocaleLowerCase('tr-TR');
+                                                const matchMain = query === "" || task.title.toLocaleLowerCase('tr-TR').includes(query);
+                                                
+                                                const matchedSubs = task.subTasks.filter(sub => 
+                                                    !sub.isCompleted && (query === "" || matchMain || sub.title.toLocaleLowerCase('tr-TR').includes(query))
+                                                );
+
+                                                if (!matchMain && matchedSubs.length === 0) return null;
+
+                                                return (
+                                                    <div key={task.id} className="border border-slate-200 p-4 bg-white rounded-2xl hover:border-indigo-300 hover:shadow-md transition-all duration-300">
+                                                        <div className="flex justify-between items-center mb-3">
+                                                            <span className="text-sm font-extrabold text-slate-800 truncate pr-3 flex-1">
+                                                                {!matchMain ? `📁 ${task.title} (İçindeki adım bulundu)` : task.title}
+                                                            </span>
+                                                            {matchMain && (
+                                                                <button onClick={() => addToWeeklyPlan(planningDay, task.id)} className="btn-press shrink-0 bg-slate-800 text-white text-[11px] font-bold px-4 py-2 rounded-xl shadow-md hover:bg-indigo-600 transition-colors">Ana Görev</button>
+                                                            )}
                                                         </div>
-                                                    )}
-                                                </div>
-                                            ))
+                                                        
+                                                        {matchedSubs.length > 0 && (
+                                                            <div className="pl-4 border-l-2 border-slate-100 space-y-2 mt-3 pt-2">
+                                                                {matchedSubs.map(sub => (
+                                                                    <div key={sub.id} className="flex justify-between text-xs font-semibold text-slate-600 items-center bg-slate-50 p-2 rounded-lg border border-slate-100 hover:border-indigo-200 transition-colors">
+                                                                        <span className="truncate pr-2">{sub.title}</span>
+                                                                        <button onClick={() => addToWeeklyPlan(planningDay, task.id, sub.id)} className="btn-press shrink-0 text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md hover:bg-indigo-100 transition-colors font-bold">Adım Ekle</button>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })
                                         )}
                                     </div>
                                 </div>
