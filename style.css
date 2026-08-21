@@ -1,4 +1,8 @@
-{
+/* ========================================================
+   PREMIUM TASK MANAGER - FULL CSS STYLESHEET
+   ======================================================== */
+
+* {
     box-sizing: border-box;
 }
 
@@ -11,26 +15,14 @@ body {
 }
 
 /* --- ÖZEL SCROLLBAR TANIMLAMALARI --- */
-::-webkit-scrollbar { 
-    width: 6px; 
-    height: 6px; 
-}
-::-webkit-scrollbar-track { 
-    background: transparent; 
-}
-::-webkit-scrollbar-thumb { 
-    background: #cbd5e1; 
-    border-radius: 10px; 
-}
-::-webkit-scrollbar-thumb:hover { 
-    background: #94a3b8; 
-}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* --- SELECT OKUNU ÖZELLEŞTİRME --- */
 select.status-select {
-    -webkit-appearance: none; 
-    -moz-appearance: none; 
-    appearance: none;
+    -webkit-appearance: none; -moz-appearance: none; appearance: none;
     background-image: url("data:image/svg+xml;utf8,<svg fill='%23475569' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
     background-repeat: no-repeat; 
     background-position-x: 95%; 
@@ -48,12 +40,8 @@ select.status-select {
 }
 
 /* --- TIKLAMA HİSSİ (TACTILE FEEDBACK) --- */
-.btn-press { 
-    transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease; 
-}
-.btn-press:active { 
-    transform: scale(0.95); 
-}
+.btn-press { transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease; }
+.btn-press:active { transform: scale(0.95); }
 
 /* --- GLASSMORPHISM (BUZLU CAM ARKA PLAN) --- */
 .glass-overlay {
@@ -65,59 +53,38 @@ select.status-select {
 
 /* --- ANİMASYON KEYFRAMES --- */
 @keyframes popIn {
-    0% { 
-        opacity: 0; 
-        transform: scale(0.95) translateY(10px); 
-    }
-    100% { 
-        opacity: 1; 
-        transform: scale(1) translateY(0); 
-    }
+    0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 .animate-modal {
     animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-
 @keyframes fadeIn {
-    from { 
-        opacity: 0; 
-    }
-    to { 
-        opacity: 1; 
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 /* --- MASTER CHECKBOX ÖZEL TASARIM --- */
 .master-checkbox {
     appearance: none;
-    width: 1.4rem; 
-    height: 1.4rem;
-    border: 2px solid #cbd5e1; 
-    border-radius: 6px; 
-    display: grid; 
-    place-content: center; 
-    cursor: pointer; 
+    width: 1.4rem; height: 1.4rem;
+    border: 2px solid #cbd5e1; border-radius: 6px; 
+    display: grid; place-content: center; cursor: pointer; 
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     background-color: white;
 }
 .master-checkbox::before {
-    content: ""; 
-    width: 0.75em; 
-    height: 0.75em; 
-    transform: scale(0); 
-    transition: 150ms transform cubic-bezier(0.4, 0, 0.2, 1);
+    content: ""; width: 0.75em; height: 0.75em; 
+    transform: scale(0); transition: 150ms transform cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: inset 1em 1em white;
     transform-origin: center;
     clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
 }
 .master-checkbox:checked { 
-    background-color: #3b82f6; 
-    border-color: #3b82f6; 
+    background-color: #3b82f6; border-color: #3b82f6; 
     animation: bounceCheck 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.master-checkbox:checked::before { 
-    transform: scale(1); 
-}
+.master-checkbox:checked::before { transform: scale(1); }
 
 @keyframes bounceCheck {
     0% { transform: scale(1); }
@@ -131,49 +98,31 @@ select.status-select {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
+
 /* ========================================================
    GLOBAL KARANLIK MOD (DARK MODE) AYARLARI
    ======================================================== */
-html.dark body {
-    background-color: #0f172a;
-    color: #f1f5f9;
-}
+html.dark body { background-color: #0f172a; color: #f1f5f9; }
 
-/* Tüm beyaz arkaplanlı kartları ve inputları koyulaştırır */
-html.dark .bg-white,
-html.dark .bg-slate-50,
-html.dark .bg-\[\#f4f7f9\],
-html.dark .bg-\[\#fbfbfa\] {
+html.dark .bg-white, html.dark .bg-slate-50, html.dark .bg-\[\#f4f7f9\], html.dark .bg-\[\#fbfbfa\] {
     background-color: #1e293b !important;
     border-color: #334155 !important;
     color: #f1f5f9 !important;
 }
 
-/* Yazı renklerini okunaklı hale getirir */
-html.dark .text-slate-800,
-html.dark .text-\[\#37352f\],
-html.dark .text-slate-700 {
-    color: #f8fafc !important;
-}
-html.dark .text-slate-500,
-html.dark .text-slate-600 {
-    color: #94a3b8 !important;
-}
+html.dark .text-slate-800, html.dark .text-\[\#37352f\], html.dark .text-slate-700 { color: #f8fafc !important; }
+html.dark .text-slate-500, html.dark .text-slate-600 { color: #94a3b8 !important; }
+html.dark .text-slate-400 { color: #64748b !important; }
 
-/* Input, select ve textarea elementleri */
-html.dark input, 
-html.dark textarea, 
-html.dark select {
+html.dark input, html.dark textarea, html.dark select {
     background-color: #0f172a !important;
     color: #f1f5f9 !important;
     border-color: #334155 !important;
 }
 
-/* Çerçeveler ve gölgeleri karanlık moda uydur */
-html.dark .border-slate-200,
-html.dark .border-slate-100 {
-    border-color: #334155 !important;
-}
-html.dark .shadow-xl, html.dark .shadow-sm, html.dark .shadow-md {
-    box-shadow: none !important; /* Karanlık modda gölgeler sırıtır, kapatıyoruz */
-}
+html.dark .border-slate-200, html.dark .border-slate-100 { border-color: #334155 !important; }
+html.dark .shadow-xl, html.dark .shadow-sm, html.dark .shadow-md { box-shadow: none !important; }
+
+/* Karanlık modda yeşil not kutusunun renk ayarı */
+html.dark .bg-green-100 { background-color: rgba(22, 101, 52, 0.3) !important; border-color: #166534 !important; }
+html.dark .text-green-800 { color: #86efac !important; }
