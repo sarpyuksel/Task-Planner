@@ -126,3 +126,100 @@ html.dark .shadow-xl, html.dark .shadow-sm, html.dark .shadow-md { box-shadow: n
 /* Karanlık modda yeşil not kutusunun renk ayarı */
 html.dark .bg-green-100 { background-color: rgba(22, 101, 52, 0.3) !important; border-color: #166534 !important; }
 html.dark .text-green-800 { color: #86efac !important; }
+
+/* ========================================================
+   A4 YATAY (LANDSCAPE) PDF ÇIKTI OPTİMİZASYONU
+   ======================================================== */
+@media print {
+    /* Sayfayı A4 Yatay ve sıfır kenar boşluğuna ayarla */
+    @page {
+        size: A4 landscape;
+        margin: 8mm 8mm 8mm 8mm;
+    }
+
+    /* Çıktıda görünmemesi gereken web öğelerini tamamen gizle */
+    body * {
+        visibility: hidden;
+    }
+
+    /* Sadece yazdırılacak haftalık tablo alanını ve içindekileri görünür yap */
+    #print-weekly-area, #print-weekly-area * {
+        visibility: visible;
+    }
+
+    #print-weekly-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+    }
+
+    /* Yazdırma esnasında butonları ve gereksiz interaktif alanları yok et */
+    .no-print {
+        display: none !important;
+    }
+
+    /* 7 günü tek satıra zorla ve sayfaya tam oturt */
+    .print-grid {
+        display: grid !important;
+        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+        gap: 6px !important;
+        width: 100% !important;
+    }
+
+    /* Gün kutularının kompakt ve şık çerçevesi */
+    .print-day-col {
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        background: #ffffff !important;
+        padding: 4px !important;
+        min-height: auto !important;
+        height: auto !important;
+    }
+
+    /* Görev kartlarının kompakt A4 boyutlandırması */
+    .print-card {
+        border: 1px solid #e2e8f0 !important;
+        border-left-width: 3.5px !important;
+        border-radius: 6px !important;
+        padding: 5px !important;
+        margin-bottom: 5px !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+        background: #ffffff !important;
+    }
+
+    /* Yazı boyutlarını A4 için ergonomik hale getir */
+    .print-text-title {
+        font-size: 9.5px !important;
+        line-height: 1.2 !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+    }
+
+    .print-text-sub {
+        font-size: 8px !important;
+        color: #64748b !important;
+    }
+
+    .print-badge {
+        font-size: 7.5px !important;
+        padding: 1px 4px !important;
+        border-radius: 4px !important;
+        font-weight: 700 !important;
+    }
+
+    .print-note {
+        font-size: 8px !important;
+        padding: 3px 5px !important;
+        margin-top: 3px !important;
+        border-radius: 4px !important;
+        background-color: #f0fdf4 !important;
+        border: 1px solid #bbf7d0 !important;
+        color: #166534 !important;
+        line-height: 1.2 !important;
+    }
+}

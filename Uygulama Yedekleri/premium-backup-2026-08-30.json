@@ -1,0 +1,1279 @@
+{
+  "categories": [
+    {
+      "name": "Yazılım",
+      "color": "#e3e2e0",
+      "text": "#37352f"
+    },
+    {
+      "name": "Kitap",
+      "color": "#f1e0e0",
+      "text": "#5c2b29"
+    },
+    {
+      "name": "Spor",
+      "color": "#faebdd",
+      "text": "#6e361a"
+    },
+    {
+      "name": "Yaz Stajı",
+      "color": "#d3e5ef",
+      "text": "#183347"
+    },
+    {
+      "name": "AISC",
+      "color": "#dbeddb",
+      "text": "#1c3829"
+    },
+    {
+      "name": "English",
+      "color": "#fbf3db",
+      "text": "#694e1d"
+    },
+    {
+      "name": "Research",
+      "color": "#ffe2dd",
+      "text": "#5d1715"
+    },
+    {
+      "name": "Research-Master",
+      "color": "#ffe2dd",
+      "text": "#5d1715"
+    },
+    {
+      "name": "Günlük İşler",
+      "color": "#d3e5ef",
+      "text": "#183347"
+    },
+    {
+      "name": "Film/Dizi",
+      "color": "#d3e5ef",
+      "text": "#183347"
+    },
+    {
+      "name": "Hobi",
+      "color": "#dcfce7",
+      "text": "#14532d"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_1787824699508",
+      "title": "Mola",
+      "category": "Günlük İşler",
+      "details": "",
+      "priority": "Çok Düşük",
+      "status": "Not Started",
+      "isTotallyDone": false,
+      "subTasks": [],
+      "parentId": null
+    },
+    {
+      "id": "task_1787824519430",
+      "title": "Uyu",
+      "category": "Günlük İşler",
+      "details": "",
+      "priority": "Çok Düşük",
+      "status": "Not Started",
+      "isTotallyDone": false,
+      "subTasks": [],
+      "parentId": null
+    },
+    {
+      "id": "task_1787824510686",
+      "title": "Yemek Ye",
+      "category": "Günlük İşler",
+      "details": "",
+      "priority": "Çok Düşük",
+      "status": "Not Started",
+      "isTotallyDone": false,
+      "subTasks": [],
+      "parentId": null
+    },
+    {
+      "id": "task_1787824502130",
+      "title": "Uyan",
+      "category": "Günlük İşler",
+      "details": "",
+      "priority": "Çok Düşük",
+      "status": "Not Started",
+      "isTotallyDone": false,
+      "subTasks": [],
+      "parentId": null
+    },
+    {
+      "id": "task_1787318937613",
+      "title": "Şato - Franz Kafka",
+      "category": "Kitap",
+      "details": "",
+      "priority": "Orta",
+      "status": "Not Started",
+      "isTotallyDone": false,
+      "subTasks": [],
+      "parentId": null
+    },
+    {
+      "id": "task_1786699323944",
+      "title": "Dava - Franz Kafka",
+      "category": "Kitap",
+      "details": "",
+      "priority": "Orta",
+      "status": "Not Started",
+      "isTotallyDone": false,
+      "subTasks": [],
+      "parentId": null
+    },
+    {
+      "id": "task_1786699298296",
+      "title": "Biz - Yevgeni Zamyatin",
+      "category": "Kitap",
+      "details": "",
+      "priority": "Orta",
+      "status": "Not Started",
+      "isTotallyDone": false,
+      "subTasks": []
+    },
+    {
+      "id": "task_1786699289860",
+      "title": "Vadideki Zambak - Balzac",
+      "category": "Kitap",
+      "details": "",
+      "priority": "Orta",
+      "status": "Not Started",
+      "isTotallyDone": false,
+      "subTasks": []
+    },
+    {
+      "id": "task_1786699280524",
+      "title": "Monte Kristo Kontu - Alexandre Dumas",
+      "category": "Kitap",
+      "details": "",
+      "priority": "Orta",
+      "status": "Not Started",
+      "isTotallyDone": false,
+      "subTasks": []
+    },
+    {
+      "id": "task_1786696846578",
+      "title": "Gitar Dersi",
+      "category": "Hobi",
+      "details": "Gezgin Müzisyen Youtube\n",
+      "priority": "Yüksek",
+      "status": "In Progress",
+      "isTotallyDone": false,
+      "subTasks": [
+        {
+          "id": "sub_1787824196403",
+          "title": "1-10",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787824202431",
+          "title": "11-20",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787824205357",
+          "title": "21-30",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787824208878",
+          "title": "31-40",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787824212034",
+          "title": "41-50",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787824216110",
+          "title": "51-60",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787824222796",
+          "title": "61-70",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787824226192",
+          "title": "71-80",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787824229148",
+          "title": "81-90",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787824231879",
+          "title": "91-100",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787824236471",
+          "title": "101-110",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787824244340",
+          "title": "111-120",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787824249535",
+          "title": "121-130",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787824258610",
+          "title": "131-140",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787824270342",
+          "title": "141-150",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787824285364",
+          "title": "151-163",
+          "isCompleted": false
+        }
+      ]
+    },
+    {
+      "id": "task_1786696816765",
+      "title": "Takamine gd12ce ns Siparişini ver",
+      "category": "Research",
+      "details": "",
+      "priority": "Yüksek",
+      "status": "Done",
+      "isTotallyDone": true,
+      "subTasks": []
+    },
+    {
+      "id": "task_1786696529694",
+      "title": "Siteyi Geliştir",
+      "category": "Yazılım",
+      "details": "Aratma yapıldığında ana kategori değil doğrudan o alt adımı gösterecek şekilde filtrelensin, tüm ana görev de çıkıp yer kaplamasın. \nSiteye profil kısmı eklensin mail ve şifre ile giriş yapılsın. Aynı zamanda açılışta Üye ol ve Giriş Yap kısımları olsun. Üye ol kısmında Ad Soyad istensin mail şifreye ek olarak.",
+      "priority": "Orta",
+      "status": "In Progress",
+      "isTotallyDone": false,
+      "subTasks": []
+    },
+    {
+      "id": "task_1786695206809",
+      "title": "Stajı Linkedinde Paylaş",
+      "category": "Yaz Stajı",
+      "details": "",
+      "priority": "Çok Yüksek",
+      "status": "In Progress",
+      "isTotallyDone": true,
+      "subTasks": []
+    },
+    {
+      "id": "task_1786370320930",
+      "title": "Fatma Turgut Konserini Telefona at",
+      "category": "Günlük İşler",
+      "details": "",
+      "priority": "Çok Yüksek",
+      "status": "Not Started",
+      "isTotallyDone": false,
+      "subTasks": []
+    },
+    {
+      "id": "task_1785918729513",
+      "title": "Yabancı Diziler",
+      "category": "Film/Dizi",
+      "details": "",
+      "priority": "Orta",
+      "status": "Not Started",
+      "isTotallyDone": false,
+      "subTasks": [
+        {
+          "id": "sub_1785918750726",
+          "title": "Black Mirror",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1785918755827",
+          "title": "Peaky Blinders",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1785918932224",
+          "title": "Better Call Saul",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786019212842",
+          "title": "Sherlock Holmes",
+          "isCompleted": false
+        }
+      ]
+    },
+    {
+      "id": "task_1785701596099",
+      "title": "M&S Tel No Başvurusu Yap",
+      "category": "Research",
+      "details": "",
+      "priority": "Yüksek",
+      "status": "Not Started",
+      "isTotallyDone": true,
+      "subTasks": []
+    },
+    {
+      "id": "task_1785701114052",
+      "title": "Gitar Nasıl Seçilir / takamine gd12ce ns inceleme",
+      "category": "Research",
+      "details": "",
+      "priority": "Orta",
+      "status": "Not Started",
+      "isTotallyDone": true,
+      "subTasks": []
+    },
+    {
+      "id": "task_1785700648735",
+      "title": "Güncel CV Hazırla",
+      "category": "Yazılım",
+      "details": "",
+      "priority": "Yüksek",
+      "status": "Not Started",
+      "isTotallyDone": false,
+      "subTasks": []
+    },
+    {
+      "id": "task_1785174537794",
+      "title": "Puzzle",
+      "category": "Hobi",
+      "details": "",
+      "priority": "Orta",
+      "status": "In Progress",
+      "isTotallyDone": false,
+      "subTasks": [
+        {
+          "id": "sub_1785174572449",
+          "title": "1000 parça Starry Night",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1785174584680",
+          "title": "1000 parça Colmar",
+          "isCompleted": true
+        }
+      ]
+    },
+    {
+      "id": "task_1785083070644",
+      "title": "Dune Serisi - Frank Herbert",
+      "category": "Kitap",
+      "details": "",
+      "priority": "Orta",
+      "status": "In Progress",
+      "isTotallyDone": false,
+      "subTasks": [
+        {
+          "id": "sub_1785083074347",
+          "title": "Dune",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1785083077247",
+          "title": "Dune Mesihi",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1785083085042",
+          "title": "Dune Çocukları",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1785083094371",
+          "title": "Dune Tanrı İmparatorluğu",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1785083101269",
+          "title": "Dune Sapkınları",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1785083135757",
+          "title": "Dune Rahibeler Meclisi",
+          "isCompleted": false
+        }
+      ]
+    },
+    {
+      "id": "task_1785082649436",
+      "title": "Christopher Nolan Filmleri",
+      "category": "Film/Dizi",
+      "details": "",
+      "priority": "Orta",
+      "status": "In Progress",
+      "isTotallyDone": false,
+      "subTasks": [
+        {
+          "id": "sub_1785082666324",
+          "title": "Inception",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1785082675197",
+          "title": "Interstellar",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1785082693496",
+          "title": "The Prestige",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1785082696820",
+          "title": "Memento",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1785082706783",
+          "title": "Oppenheimer",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1785082712647",
+          "title": "Dunkirk",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1785082725138",
+          "title": "Batman Begins",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1785082749603",
+          "title": "The Dark Knight",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1785082775793",
+          "title": "The Dark Knight Rises",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1785087840348",
+          "title": "Tenet",
+          "isCompleted": true
+        }
+      ]
+    },
+    {
+      "id": "task_1785077749989",
+      "title": "Filmler (Genel)",
+      "category": "Film/Dizi",
+      "details": "",
+      "priority": "Orta",
+      "status": "In Progress",
+      "isTotallyDone": false,
+      "subTasks": [
+        {
+          "id": "sub_1785700872518",
+          "title": "Se7en İzle",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1785917040144",
+          "title": "Batı Cephesinde Yeni Bir Şey Yok",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1785918535363",
+          "title": "Gladyatör 2",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1785918542456",
+          "title": " Lucy",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1785919008160",
+          "title": "Anora",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1785919436735",
+          "title": "The Adam Project",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1786019406800",
+          "title": " A Beautiful Mind (Akıl Oyunları)",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1786341582739",
+          "title": "Matrix 1",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1786341584326",
+          "title": "Matrix 2",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1786341585889",
+          "title": "Matrix 3",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786341601631",
+          "title": "Kuzuların Sessizliği",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786345760863",
+          "title": "Esaretin Bedeli",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786345773569",
+          "title": "The Godfather",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786345778638",
+          "title": "The Godfather 2",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786345797936",
+          "title": "Forrest Gump",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786345867173",
+          "title": "Schindler'in Listesi",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786345885843",
+          "title": "The Green Mile",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786345964687",
+          "title": "Er Ryan'ı Kurtarmak",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786345975406",
+          "title": "Geleceğe Dönüş",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786346006808",
+          "title": "The Pianist",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786346088335",
+          "title": "The Terminator",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786346095367",
+          "title": "Terminatör 2: Mahşer Günü",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786346131681",
+          "title": "Pulp Fiction",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786346248310",
+          "title": "Spider-Man: Across the Spider-Verse",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1786346263505",
+          "title": "Kill Bill Volume 1 (8.6)",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786346382087",
+          "title": "Ruhların Kaçışı - Sen to Chihiro no kamikakushi",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786347001285",
+          "title": "Blood Diamond - Kanlı Elmas (8.5)",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786348401988",
+          "title": "Kill Bill: Volume 2 (8.5)",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786348671774",
+          "title": "Reservoir Dogs(8.4)",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786350137917",
+          "title": "V For Vendetta",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1786626488965",
+          "title": "Jojo Rabbit",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1786628314593",
+          "title": "Obsession",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1786629515961",
+          "title": "Spiderman Brand New Day",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1787406978778",
+          "title": "The Platform",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1787408765100",
+          "title": "The Irishman",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787409558552",
+          "title": "Spider-Man: Into the Spider-Verse",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1787426630429",
+          "title": "John Wick",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787426632170",
+          "title": "John Wick 2",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787426633802",
+          "title": "John Wick 3",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787426636646",
+          "title": "John Wick 4",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1787839254285",
+          "title": "Deadpool & Wolverine",
+          "isCompleted": false
+        }
+      ]
+    },
+    {
+      "id": "task_1785077730508",
+      "title": "Animasyon Filmleri",
+      "category": "Film/Dizi",
+      "details": "",
+      "priority": "Orta",
+      "status": "In Progress",
+      "isTotallyDone": false,
+      "subTasks": [
+        {
+          "id": "sub_1785082892018",
+          "title": "Wall-E",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1785082897270",
+          "title": "Megamind",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1785082933549",
+          "title": "Cars 1",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1785082936384",
+          "title": "Cars 2",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1785082938636",
+          "title": "Cars 3",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1785082950540",
+          "title": "Corps Bride",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1786348559191",
+          "title": "Ratatouille(8.4)",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786348595345",
+          "title": "Zootopia(8.5)",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1788097763313",
+          "title": "Köfte Yağmuru",
+          "isCompleted": true
+        }
+      ]
+    },
+    {
+      "id": "task_1784871671126",
+      "title": "Mısır Mitolojisi",
+      "category": "Kitap",
+      "details": "",
+      "priority": "Orta",
+      "status": "Not Started",
+      "isTotallyDone": true,
+      "subTasks": [
+        {
+          "id": "sub_1784871741050",
+          "title": "0-50 oku",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784871793605",
+          "title": "51-111",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784871800083",
+          "title": "112-150",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784871807453",
+          "title": "151-217",
+          "isCompleted": false
+        }
+      ]
+    },
+    {
+      "id": "task_1784040978332",
+      "title": "Kitchen Chaos Last Lecture",
+      "category": "Yazılım",
+      "details": "",
+      "priority": "Çok Düşük",
+      "status": "In Progress",
+      "isTotallyDone": false,
+      "subTasks": []
+    },
+    {
+      "id": "task_1783981659276",
+      "title": "Cherry Deodorant Al",
+      "category": "Research",
+      "details": "",
+      "priority": "Orta",
+      "status": "Not Started",
+      "isTotallyDone": true,
+      "subTasks": []
+    },
+    {
+      "id": "task_1783981536698",
+      "title": "Güneş Kremi Al",
+      "category": "Research",
+      "details": "",
+      "priority": "Orta",
+      "status": "Not Started",
+      "isTotallyDone": true,
+      "subTasks": []
+    },
+    {
+      "id": "task_1783981512263",
+      "title": "Router Al",
+      "category": "Research",
+      "details": "",
+      "priority": "Çok Yüksek",
+      "status": "Not Started",
+      "isTotallyDone": true,
+      "subTasks": []
+    },
+    {
+      "id": "task_1783981477538",
+      "title": "Dürbün Al",
+      "category": "Research",
+      "details": "",
+      "priority": "Çok Düşük",
+      "status": "Not Started",
+      "isTotallyDone": true,
+      "subTasks": []
+    },
+    {
+      "id": "task_1783981465232",
+      "title": "Terlik Al",
+      "category": "Research",
+      "details": "",
+      "priority": "Orta",
+      "status": "Not Started",
+      "isTotallyDone": true,
+      "subTasks": []
+    },
+    {
+      "id": "task_1783514556553",
+      "title": "Master Yapacağın Ülkeyi ve Şehri Belirle ",
+      "category": "Research-Master",
+      "details": "Ülkelerin sosyal-kültürel-ekonomik-dil gereklilik durumlarını araştır. (Almanya,İtalya,İngiltere,Amerika, İspanya vs.)",
+      "priority": "Düşük",
+      "status": "Not Started",
+      "subTasks": [],
+      "isTotallyDone": false
+    },
+    {
+      "id": "task_1783514458400",
+      "title": "Master Yapmak için Gerekli Şartları Belirle",
+      "category": "Research-Master",
+      "details": "GPA + IELTS / TOEFL + Sosyal Transkript + Niyet Mektubu vs. Detaylıca bütün kabul şartlarını araştır.",
+      "priority": "Düşük",
+      "status": "Not Started",
+      "subTasks": [],
+      "isTotallyDone": false
+    },
+    {
+      "id": "task_1783505090961",
+      "title": "Udemy English Course",
+      "category": "English",
+      "details": "The English Master Course: English Grammar, English Speaking\n",
+      "priority": "Çok Yüksek",
+      "status": "Not Started",
+      "subTasks": [
+        {
+          "id": "sub_1783505248338",
+          "title": "Review all the tenses you've learned so far.",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1783505279561",
+          "title": "Future Continuous Tense",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1783505315616",
+          "title": "The Present Participle -ing",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1783505332304",
+          "title": "The Gerund -ing",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1783505350704",
+          "title": "Past Participle -ed",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1783505361311",
+          "title": "Present Perfect Tense",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1783505372687",
+          "title": "Past Perfect Tense",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1783505392055",
+          "title": "Future Perfect Tense",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1783505411600",
+          "title": "Present Perfect Continuous Tense",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1783505430855",
+          "title": "Past Perfect Continuous Tense",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1783505458175",
+          "title": "Future Perfect Continuous Tense",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1783505557654",
+          "title": "Helping and Model Verbs (Section 24- 29)",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1783513980311",
+          "title": "Phrasal Verbs(Sect,on 31-33)",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1783514029925",
+          "title": "Nouns and Pronouns (Section 35-45)",
+          "isCompleted": false
+        }
+      ],
+      "isTotallyDone": false
+    },
+    {
+      "id": "task_1783504987063",
+      "title": "Fitness Antrenmanı",
+      "category": "Spor",
+      "details": "",
+      "priority": "Orta",
+      "status": "Not Started",
+      "subTasks": [],
+      "isTotallyDone": false
+    },
+    {
+      "id": "task_1783504950047",
+      "title": "Yüzmeye Git (Deniz-Havuz)",
+      "category": "Spor",
+      "details": "",
+      "priority": "Orta",
+      "status": "In Progress",
+      "subTasks": []
+    },
+    {
+      "id": "task_1783504927654",
+      "title": "Koşu Yap",
+      "category": "Spor",
+      "details": "",
+      "priority": "Orta",
+      "status": "In Progress",
+      "subTasks": []
+    },
+    {
+      "id": "task_1783504279858",
+      "title": "Valilik Staj (8.30-17.30)",
+      "category": "Yaz Stajı",
+      "details": "Kırklareli Valiliği Zorunlu Yaz Stajı (20 iş günü)\n\nMesai Saatleri: 8.30-17.30",
+      "priority": "Çok Yüksek",
+      "status": "Done",
+      "subTasks": [
+        {
+          "id": "sub_1784699429303",
+          "title": "Son Vlog editini yap",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786051143346",
+          "title": "20. Gün Valilik sistemlerinin eski-yeni sistemini incele ",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786051182057",
+          "title": "20. Staj Günlerini defterde doldur",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1786051389994",
+          "title": "videoyu youtbubea yükle QR ile link oluştur",
+          "isCompleted": false
+        }
+      ],
+      "isTotallyDone": true
+    },
+    {
+      "id": "task_1783504160446",
+      "title": "AISC",
+      "category": "AISC",
+      "details": "Konferans makalesi araştırması, testleri, jüri onayı, kendi makalemizin yayımlanması...",
+      "priority": "Yüksek",
+      "status": "Not Started",
+      "subTasks": [
+        {
+          "id": "sub_1784699517609",
+          "title": "Upload attack, smoteun yanlış uygulanışı önce uygılanınca nası etki etki ediyor bunlunla illgili 2 adet Article bul",
+          "isCompleted": false
+        }
+      ]
+    },
+    {
+      "id": "task_1783504079370",
+      "title": "Calisthenics Antrenmanı",
+      "category": "Spor",
+      "details": "Tom Peto Training\n\nhttps://www.youtube.com/playlist?list=PLDbIXDUYEhwJQnLCnPLZ1tuzoKVv8U0N4",
+      "priority": "Orta",
+      "status": "Not Started",
+      "subTasks": []
+    },
+    {
+      "id": "task_1783503006016",
+      "title": "Beyaz Zambaklar Ülkesinde - Grigory PETROW",
+      "category": "Kitap",
+      "details": "",
+      "priority": "Orta",
+      "status": "In Progress",
+      "subTasks": [
+        {
+          "id": "sub_1783503040607",
+          "title": "1-81 oku",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1783503047727",
+          "title": "82-140 oku",
+          "isCompleted": false
+        }
+      ],
+      "isTotallyDone": true
+    },
+    {
+      "id": "task_1783502828615",
+      "title": "Unity Oyun Motoru",
+      "category": "Yazılım",
+      "details": "Code Monkey, Kitchen Chaos\n",
+      "priority": "Yüksek",
+      "status": "In Progress",
+      "subTasks": [
+        {
+          "id": "sub_1783505764483",
+          "title": "Unity Oyun Motoru Kurulumlarını Yap",
+          "isCompleted": true
+        },
+        {
+          "id": "sub_1783505778891",
+          "title": "Unity Arayüz Öğren (BTK)",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1783505866224",
+          "title": " Learn Unity Beginner/Intermediate 2026 (FREE COMPLETE Course - Unity Tutorial)",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784040190455",
+          "title": "10'dklık Video + Uygulama",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784040196830",
+          "title": "20'dklık Video + Uygulama",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784040204143",
+          "title": "30'dklık Video + Uygulama",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784040208727",
+          "title": "40'dklık Video + Uygulama",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784040213710",
+          "title": "50'dklık Video + Uygulama",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784040225825",
+          "title": "1saatlik Video + Uygulama",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784040652256",
+          "title": "Related Videos = [1]",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784040656481",
+          "title": "Related Videos = [2]",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784040659353",
+          "title": "Related Videos = [3]",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784040663880",
+          "title": "Related Videos = [4]",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784040667640",
+          "title": "Related Videos = [5]",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784040672624",
+          "title": "Related Videos = [6]",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784040677441",
+          "title": "Related Videos = [7]",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784040682007",
+          "title": "Related Videos = [8]",
+          "isCompleted": false
+        },
+        {
+          "id": "sub_1784040687440",
+          "title": "Related Videos = [9]",
+          "isCompleted": false
+        }
+      ]
+    }
+  ],
+  "weeklyPlan": {
+    "Pazartesi": [],
+    "Salı": [],
+    "Çarşamba": [],
+    "Perşembe": [
+      {
+        "id": "wp_1787824558810",
+        "taskId": "task_1785083070644",
+        "subTaskId": "sub_1785083094371",
+        "status": "Not Started",
+        "time": "22:00 - 00:00",
+        "note": ""
+      },
+      {
+        "id": "wp_1787826713835",
+        "taskId": "task_1787824519430",
+        "subTaskId": null,
+        "status": "Not Started",
+        "time": "00:00",
+        "note": ""
+      }
+    ],
+    "Cuma": [
+      {
+        "id": "wp_1787824535776",
+        "taskId": "task_1787824502130",
+        "subTaskId": null,
+        "status": "Not Started",
+        "time": "08:00",
+        "note": ""
+      },
+      {
+        "id": "wp_1787824628833",
+        "taskId": "task_1783504950047",
+        "subTaskId": null,
+        "status": "Not Started",
+        "time": "09:30 - 11:30",
+        "note": ""
+      },
+      {
+        "id": "wp_1787824644955",
+        "taskId": "task_1787824510686",
+        "subTaskId": null,
+        "status": "Not Started",
+        "time": "11:30 - 12:30",
+        "note": ""
+      },
+      {
+        "id": "wp_1787824661432",
+        "taskId": "task_1786696846578",
+        "subTaskId": null,
+        "status": "Not Started",
+        "time": "12:30 - 14:00",
+        "note": ""
+      },
+      {
+        "id": "wp_1787824731691",
+        "taskId": "task_1785083070644",
+        "subTaskId": "sub_1785083094371",
+        "status": "Not Started",
+        "time": "14:30 - 15:00",
+        "note": ""
+      },
+      {
+        "id": "wp_1787824767068",
+        "taskId": "task_1786696846578",
+        "subTaskId": null,
+        "status": "Not Started",
+        "time": "15:00 - 16:00",
+        "note": ""
+      },
+      {
+        "id": "wp_1787824807339",
+        "taskId": "task_1785700648735",
+        "subTaskId": null,
+        "status": "Not Started",
+        "time": "16:00 - 17:00",
+        "note": ""
+      },
+      {
+        "id": "wp_1787824835213",
+        "taskId": "task_1785083070644",
+        "subTaskId": "sub_1785083094371",
+        "status": "Not Started",
+        "time": "17:00 - 18:00",
+        "note": ""
+      },
+      {
+        "id": "wp_1787824862908",
+        "taskId": "task_1783504950047",
+        "subTaskId": null,
+        "status": "Not Started",
+        "time": "18:00 - 19:30",
+        "note": ""
+      },
+      {
+        "id": "wp_1787824921777",
+        "taskId": "task_1787824510686",
+        "subTaskId": null,
+        "status": "Not Started",
+        "time": "20:00 - 21:00",
+        "note": ""
+      }
+    ],
+    "Cumartesi": [],
+    "Pazar": []
+  },
+  "habits": [
+    {
+      "id": "habit_1783542141982",
+      "title": "Programa Uymak"
+    },
+    {
+      "id": "habit_1786344957560",
+      "title": "Gitar Çalışması Yap"
+    },
+    {
+      "id": "habit_1786344964998",
+      "title": "Kitap Oku"
+    }
+  ],
+  "habitLogs": {
+    "habit-1": {},
+    "habit_1783542141982": {
+      "2026-07-20": "done",
+      "2026-07-21": "failed",
+      "2026-07-22": "done",
+      "2026-07-23": "failed",
+      "2026-07-24": "done",
+      "2026-07-27": "done"
+    },
+    "habit_1786344943488": {
+      "2026-08-11": "done",
+      "2026-08-12": "done",
+      "2026-08-13": "failed",
+      "2026-08-15": "done",
+      "2026-08-19": "done"
+    }
+  }
+}
