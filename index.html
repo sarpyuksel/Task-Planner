@@ -525,6 +525,7 @@
 
             // YENİ: Sağ tıklayarak ek açıklama girme fonksiyonu
             const addNoteToWeeklyItem = (day, itemId) => {
+                
                 const currentItem = weeklyPlan[day].find(i => i.id === itemId);
                 const currentNote = currentItem.note || "";
                 const note = window.prompt("Bu göreve günlük ek açıklama girin (Silmek için boş bırakıp Tamam'a basın):", currentNote);
@@ -535,6 +536,35 @@
                         [day]: weeklyPlan[day].map(item => item.id === itemId ? { ...item, note: note.trim() } : item)
                     });
                 }
+            };
+            // SAATİ GÜNCELLEME VEYA SİLME FONKSİYONU
+            const updateWeeklyItemTime = (day, itemId, newTime) => {
+                setWeeklyPlan(prev => ({
+                    ...prev,
+                    [day]: prev[day].map(item => item.id === itemId ? { ...item, time: newTime } : item)
+                }));
+            };
+
+            // KARTI BAŞKA GÜNE KOPYALAMA (RUTİN ÇOĞALTMA)
+            const duplicateWeeklyItem = (sourceDay, item) => {
+                const targetDay = window.prompt(`Bu görevi hangi güne kopyalamak istersin?\n(${DAYS_OF_WEEK.join(", ")})`, sourceDay);
+                if (!targetDay) return;
+                
+                const matchedDay = DAYS_OF_WEEK.find(d => d.toLocaleLowerCase('tr-TR') === targetDay.trim().toLocaleLowerCase('tr-TR'));
+                if (!matchedDay) {
+                    alert("Geçersiz gün adı girdiniz!");
+                    return;
+                }
+
+                const duplicated = {
+                    ...item,
+                    id: "wp_" + Date.now(), // Yeni benzersiz ID
+                };
+
+                setWeeklyPlan(prev => ({
+                    ...prev,
+                    [matchedDay]: [...prev[matchedDay], duplicated]
+                }));
             };
 
             // ==========================================
@@ -897,7 +927,7 @@
                                                         Sil
                                                     </button>
                                                 </div>
-                                            </div>
+                                            </div>git
                                         );
                                     })}
                                 </div>
@@ -983,6 +1013,15 @@
                                                                 className="no-print btn-press absolute top-2 right-2 md:opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 bg-red-50 rounded-md w-6 h-6 flex items-center justify-center transition-all"
                                                             >
                                                                 ✕
+                                                            </button>
+
+                                                            {/* KOPYALA BUTONU */}
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); duplicateWeeklyItem(day, item); }} 
+                                                                className="no-print btn-press absolute top-2 right-9 md:opacity-0 group-hover:opacity-100 text-slate-500 hover:text-indigo-600 bg-slate-100 hover:bg-indigo-50 rounded-md w-6 h-6 flex items-center justify-center transition-all text-xs"
+                                                                title="Bu görevi başka güne kopyala"
+                                                            >
+                                                                📋
                                                             </button>
                                                             
                                                             {/* Zaman Aralığı Rozeti */}
@@ -1322,6 +1361,65 @@
                                         placeholder="Detaylar, notlar veya linkler ekle..." 
                                         className="w-full text-sm font-medium text-slate-600 bg-slate-50 p-4 rounded-xl mb-8 border border-slate-200 hover:border-slate-300 focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 outline-none transition-all resize-none min-h-[120px]" 
                                     />
+
+                                    {/* HAFTALIK PROGRAM SAAT YÖNETİMİ */}
+                                    {Object.keys(weeklyPlan).some(day => weeklyPlan[day].some(item => item.taskId === currentSelectedTask.id)) && (
+                                        <div className="mb-6 bg-indigo-50/60 border border-indigo-100 p-4 rounded-2xl">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <label className="text-[11px] font-extrabold text-indigo-900 uppercase tracking-wider">
+                                                    🕒 Haftalık Program Saati
+                                                </label>
+                                            </div>
+                                            
+                                            {/* Bu görevin haftalık planda geçtiği günleri listeler */}
+                                            {DAYS_OF_WEEK.map(day => {
+                                                const dayItems = weeklyPlan[day].filter(i => i.taskId === currentSelectedTask.id);
+                                                if (dayItems.length === 0) return null;
+
+                                                return dayItems.map(item => {
+                                                    const [start = "", end = ""] = (item.time || "").split(" - ");
+
+                                                    return (
+                                                        <div key={item.id} className="flex items-center space-x-2 mt-2 bg-white p-2.5 rounded-xl border border-indigo-100 shadow-sm">
+                                                            <span className="text-xs font-bold text-slate-700 w-20 shrink-0">{day}:</span>
+                                                            
+                                                            <input 
+                                                                type="time" 
+                                                                value={start}
+                                                                onChange={(e) => {
+                                                                    const newStart = e.target.value;
+                                                                    const newTime = newStart && end ? `${newStart} - ${end}` : newStart || end;
+                                                                    updateWeeklyItemTime(day, item.id, newTime);
+                                                                }}
+                                                                className="bg-slate-50 border border-slate-200 text-xs rounded-lg px-2 py-1 font-bold text-slate-700 outline-none focus:border-indigo-400"
+                                                            />
+                                                            <span className="text-slate-400 text-xs">-</span>
+                                                            <input 
+                                                                type="time" 
+                                                                value={end}
+                                                                onChange={(e) => {
+                                                                    const newEnd = e.target.value;
+                                                                    const newTime = start && newEnd ? `${start} - ${newEnd}` : start || newEnd;
+                                                                    updateWeeklyItemTime(day, item.id, newTime);
+                                                                }}
+                                                                className="bg-slate-50 border border-slate-200 text-xs rounded-lg px-2 py-1 font-bold text-slate-700 outline-none focus:border-indigo-400"
+                                                            />
+
+                                                            {item.time && (
+                                                                <button 
+                                                                    onClick={() => updateWeeklyItemTime(day, item.id, "")}
+                                                                    className="btn-press text-[11px] text-red-500 hover:text-red-700 font-bold px-2 py-1 rounded-md hover:bg-red-50 transition-colors shrink-0 ml-auto"
+                                                                    title="Saati kaldır"
+                                                                >
+                                                                    Kaldır
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                });
+                                            })}
+                                        </div>
+                                    )}
                                     
                                     <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400 mb-3">Alt Adımlar</h3>
                                     <input 
