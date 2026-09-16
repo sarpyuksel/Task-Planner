@@ -128,21 +128,20 @@ html.dark .bg-green-100 { background-color: rgba(22, 101, 52, 0.3) !important; b
 html.dark .text-green-800 { color: #86efac !important; }
 
 /* ========================================================
-   A4 YATAY (LANDSCAPE) PDF ÇIKTI OPTİMİZASYONU
+   A4 LANDSCAPE - ULTRA KOMPAKT PDF / YAZDIRMA DÜZENİ
    ======================================================== */
 @media print {
-    /* Sayfayı A4 Yatay ve sıfır kenar boşluğuna ayarla */
     @page {
         size: A4 landscape;
-        margin: 8mm 8mm 8mm 8mm;
+        margin: 5mm 6mm; /* Sayfa kenarlarındaki ölü boşlukları minimuma indirdik */
     }
 
-    /* Çıktıda görünmemesi gereken web öğelerini tamamen gizle */
+    /* Web arayüzünü tamamen gizle */
     body * {
         visibility: hidden;
     }
 
-    /* Sadece yazdırılacak haftalık tablo alanını ve içindekileri görünür yap */
+    /* Sadece haftalık tablo alanını ekrana getir */
     #print-weekly-area, #print-weekly-area * {
         visibility: visible;
     }
@@ -157,69 +156,119 @@ html.dark .text-green-800 { color: #86efac !important; }
         background: white !important;
     }
 
-    /* Yazdırma esnasında butonları ve gereksiz interaktif alanları yok et */
-    .no-print {
+    /* Çıktıda ASLA yer kaplamasını istemediğimiz her şeyi yok et */
+    .no-print,
+    select,
+    button,
+    .status-select,
+    .print-badge {
         display: none !important;
     }
 
-    /* 7 günü tek satıra zorla ve sayfaya tam oturt */
+    /* Üst başlık boşluğunu minimal yap */
+    #print-weekly-area h1 {
+        font-size: 16px !important;
+        margin-bottom: 6px !important;
+        padding: 0 !important;
+    }
+
+    /* 7 günü tek satırda tam eşit 7 sütun yap */
     .print-grid {
         display: grid !important;
-        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-        gap: 6px !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+        gap: 4px !important;
         width: 100% !important;
     }
 
-    /* Gün kutularının kompakt ve şık çerçevesi */
+    /* Gün sütunu kutusu */
     .print-day-col {
         border: 1px solid #cbd5e1 !important;
-        border-radius: 8px !important;
-        background: #ffffff !important;
-        padding: 4px !important;
+        border-radius: 4px !important;
+        background: #fafafa !important;
+        padding: 3px !important;
         min-height: auto !important;
         height: auto !important;
     }
 
-    /* Görev kartlarının kompakt A4 boyutlandırması */
+    /* Gün Başlığı (Pazartesi, Salı vb.) */
+    .print-day-col > div:first-child {
+        padding: 2px 4px !important;
+        margin-bottom: 4px !important;
+        background: #f1f5f9 !important;
+        border: none !important;
+        border-bottom: 1px solid #cbd5e1 !important;
+        border-radius: 2px !important;
+    }
+
+    .print-day-col > div:first-child span {
+        font-size: 9px !important;
+        font-weight: 800 !important;
+        color: #1e293b !important;
+        text-align: center !important;
+        display: block !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    /* Görev Kartları: Minimal liste elemanı görünümü */
     .print-card {
         border: 1px solid #e2e8f0 !important;
-        border-left-width: 3.5px !important;
-        border-radius: 6px !important;
-        padding: 5px !important;
-        margin-bottom: 5px !important;
+        border-left: 3px solid #3b82f6 !important; /* Soluna şık ince renk şeridi */
+        border-radius: 3px !important;
+        padding: 3px 4px !important;
+        margin-bottom: 3px !important;
+        background: #ffffff !important;
         box-shadow: none !important;
         page-break-inside: avoid;
-        background: #ffffff !important;
     }
 
-    /* Yazı boyutlarını A4 için ergonomik hale getir */
-    .print-text-title {
-        font-size: 9.5px !important;
-        line-height: 1.2 !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-    }
-
-    .print-text-sub {
-        font-size: 8px !important;
-        color: #64748b !important;
-    }
-
-    .print-badge {
+    /* Saat Göstergesi: Minik ve derli toplu */
+    .print-card span:has(svg),
+    .print-card .print-badge {
+        display: inline-block !important;
         font-size: 7.5px !important;
-        padding: 1px 4px !important;
-        border-radius: 4px !important;
         font-weight: 700 !important;
+        color: #1e40af !important;
+        background: #eff6ff !important;
+        border: 1px solid #dbeafe !important;
+        padding: 0.5px 3px !important;
+        border-radius: 2px !important;
+        margin-bottom: 2px !important;
+        line-height: 1 !important;
     }
 
+    /* Görev Başlığı: Okunaklı, sıkışık ve net */
+    .print-text-title {
+        font-size: 8.5px !important;
+        font-weight: 700 !important;
+        line-height: 1.15 !important;
+        color: #0f172a !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Varsa üst ana görev referansı */
+    .print-text-sub {
+        font-size: 7px !important;
+        color: #94a3b8 !important;
+        line-height: 1 !important;
+        margin-bottom: 1px !important;
+    }
+
+    /* Varsa Yeşil Ek Açıklama Notu: Çok ince tek satır */
     .print-note {
-        font-size: 8px !important;
-        padding: 3px 5px !important;
-        margin-top: 3px !important;
-        border-radius: 4px !important;
+        font-size: 7.5px !important;
+        line-height: 1.1 !important;
+        padding: 1.5px 3px !important;
+        margin-top: 2px !important;
+        margin-bottom: 0 !important;
+        border-radius: 2px !important;
         background-color: #f0fdf4 !important;
         border: 1px solid #bbf7d0 !important;
         color: #166534 !important;
-        line-height: 1.2 !important;
+    }
+
+    /* Kartın altındaki o status ve çizgili alanı tamamen gizle */
+    .print-card > div.mt-auto {
+        display: none !important;
     }
 }
