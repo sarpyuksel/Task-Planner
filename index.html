@@ -121,6 +121,8 @@
             const [filterCategory, setFilterCategory] = useState("Hepsi");
             
             const [planningDay, setPlanningDay] = useState(null);
+            // Kopyalanmakta olan görevi tutan state
+            const [copyingItem, setCopyingItem] = useState(null); // { sourceDay, item }
             const [startTime, setStartTime] = useState("");
             const [endTime, setEndTime] = useState("");
             const [planningSearchQuery, setPlanningSearchQuery] = useState("");
@@ -543,25 +545,27 @@
                 }));
             };
 
-            const duplicateWeeklyItem = (sourceDay, item) => {
-                const targetDay = window.prompt(`Bu görevi hangi güne kopyalamak istersin?\n(${DAYS_OF_WEEK.join(", ")})`, sourceDay);
-                if (!targetDay) return;
-                
-                const matchedDay = DAYS_OF_WEEK.find(d => d.toLocaleLowerCase('tr-TR') === targetDay.trim().toLocaleLowerCase('tr-TR'));
-                if (!matchedDay) {
-                    alert("Geçersiz gün adı girdiniz!");
-                    return;
-                }
+           // Kopyalama modunu başlatır
+            const startCopying = (sourceDay, item) => {
+                setCopyingItem({ sourceDay, item });
+            };
 
+            // Hedef gün kutusuna tıklandığında kopyayı oraya bırakır
+            const completeCopying = (targetDay) => {
+                if (!copyingItem) return;
+                
                 const duplicated = {
-                    ...item,
+                    ...copyingItem.item,
                     id: "wp_" + Date.now(),
                 };
 
                 setWeeklyPlan(prev => ({
                     ...prev,
-                    [matchedDay]: [...prev[matchedDay], duplicated]
+                    [targetDay]: [...prev[targetDay], duplicated]
                 }));
+
+                // Kopyalama modundan çık
+                setCopyingItem(null);
             };
 
             // ==========================================
@@ -962,8 +966,19 @@
                                             key={day} 
                                             onDragOver={(e) => e.preventDefault()}
                                             onDrop={(e) => handleDrop(e, day)}
-                                            className="print-day-col bg-slate-100/50 rounded-2xl p-2 border border-slate-200 shadow-sm flex flex-col h-auto min-h-[250px] lg:h-[calc(100vh-160px)] transition-all hover:bg-slate-100"
+                                            className="print-day-col bg-slate-100/50 rounded-2xl p-2 border border-slate-200 shadow-sm flex flex-col h-auto min-h-[250px] lg:h-[calc(100vh-160px)] transition-all hover:bg-slate-100 relative"
                                         >
+                                            {/* YENİ: KOPYALAMA MODUNDA GÜNÜN TEPESİNDE BELİREN KUTU */}
+                                            {copyingItem && (
+                                                <button
+                                                    onClick={() => completeCopying(day)}
+                                                    className="no-print btn-press mb-2 w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-[11px] rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center space-x-1.5 animate-bounce"
+                                                >
+                                                    <span>📥</span>
+                                                    <span>Buraya Kopyala</span>
+                                                </button>
+                                            )}
+
                                             <div className="flex justify-between items-center mb-3 p-3 bg-white rounded-xl shadow-sm border border-slate-100 transition-colors duration-300 print:p-1.5 print:mb-2 print:border-b">
                                                 <span className="font-extrabold text-sm text-slate-800 uppercase tracking-wide print:text-[11px] print:text-center print:w-full">
                                                     {day}
@@ -1011,11 +1026,11 @@
                                                                 ✕
                                                             </button>
 
-                                                            {/* KOPYALA BUTONU */}
+                                                           {/* KOPYALA BUTONU */}
                                                             <button 
-                                                                onClick={(e) => { e.stopPropagation(); duplicateWeeklyItem(day, item); }} 
-                                                                className="no-print btn-press absolute top-2 right-9 md:opacity-0 group-hover:opacity-100 text-slate-500 hover:text-indigo-600 bg-slate-100 hover:bg-indigo-50 rounded-md w-6 h-6 flex items-center justify-center transition-all text-xs"
-                                                                title="Bu görevi başka güne kopyala"
+                                                                onClick={(e) => { e.stopPropagation(); startCopying(day, item); }} 
+                                                                className={`no-print btn-press absolute top-2 right-9 md:opacity-0 group-hover:opacity-100 rounded-md w-6 h-6 flex items-center justify-center transition-all text-xs ${copyingItem?.item.id === item.id ? 'bg-indigo-600 text-white opacity-100' : 'text-slate-500 hover:text-indigo-600 bg-slate-100 hover:bg-indigo-50'}`}
+                                                                title="Bu görevi kopyalamak için tıkla"
                                                             >
                                                                 📋
                                                             </button>
