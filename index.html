@@ -317,6 +317,29 @@
                 setNewCategoryName(""); 
                 setShowAddCategory(false);
             };
+            // KATEGORİ SİLME FONKSİYONU
+            const handleDeleteCategory = (catName) => {
+                if (categories.length <= 1) {
+                    alert("En az bir kategori kalmalıdır!");
+                    return;
+                }
+
+                if (window.confirm(`"${catName}" kategorisini silmek istediğinize emin misiniz?\nBu kategorideki görevler silinmez, diğer kategoriye aktarılır.`)) {
+                    const remainingCats = categories.filter(c => c.name !== catName);
+                    const fallbackCat = remainingCats[0].name;
+
+                    // Kategoriyi listeden kaldır
+                    setCategories(remainingCats);
+
+                    // Bu kategoriye ait görevleri kalan ilk kategoriye aktar
+                    setTasks(tasks.map(t => t.category === catName ? { ...t, category: fallbackCat } : t));
+
+                    // Eğer şu an silinen kategoriyi filtreliyorsak filtreyi "Hepsi"ne çek
+                    if (filterCategory === catName) {
+                        setFilterCategory("Hepsi");
+                    }
+                }
+            };
 
             const handleAddTask = (e) => {
                 e.preventDefault(); 
@@ -748,15 +771,32 @@
                                     </button>
                                     
                                     {categories.map(cat => (
-                                        <button 
-                                            key={cat.name} 
-                                            onClick={() => setFilterCategory(cat.name)} 
-                                            style={{ backgroundColor: filterCategory === cat.name ? cat.text : cat.color, color: filterCategory === cat.name ? '#ffffff' : cat.text }} 
-                                            className="btn-press px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm hover:shadow-md"
-                                        >
-                                            {cat.name}
-                                        </button>
-                                    ))}
+    <div 
+        key={cat.name}
+        style={{ backgroundColor: filterCategory === cat.name ? cat.text : cat.color, color: filterCategory === cat.name ? '#ffffff' : cat.text }}
+        className="group relative inline-flex items-center rounded-lg text-xs font-bold shadow-sm transition-all hover:shadow-md overflow-hidden"
+    >
+        {/* Kategori Filtre Butonu */}
+        <button 
+            onClick={() => setFilterCategory(cat.name)} 
+            className="px-3 py-1.5 cursor-pointer outline-none"
+        >
+            {cat.name}
+        </button>
+
+        {/* Kategori Silme Çarpısı (✕) */}
+        <button
+            onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteCategory(cat.name);
+            }}
+            title={`${cat.name} kategorisini sil`}
+            className="pr-2 pl-0.5 py-1.5 opacity-40 hover:opacity-100 hover:text-red-400 font-extrabold cursor-pointer transition-opacity"
+        >
+            ✕
+        </button>
+    </div>
+))}
 
                                     {showAddCategory ? (
                                         <form onSubmit={handleAddCategory} className="flex items-center space-x-2 ml-0 md:ml-2 mt-2 md:mt-0 animate-modal">
